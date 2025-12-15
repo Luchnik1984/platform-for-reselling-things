@@ -19,7 +19,7 @@
   <description>Application for managing ads</description>
 
   <properties>
-    <java.version>11</java.version>
+    <java.version>17</java.version>
   </properties>
 
   <dependencies>
@@ -45,7 +45,7 @@
     <dependency>
       <groupId>com.h2database</groupId>
       <artifactId>h2</artifactId>
-      <scope>test</scope>
+      <scope>runtime</scope>
     </dependency>
     <dependency>
       <groupId>org.projectlombok</groupId>
@@ -67,6 +67,7 @@
       <artifactId>springdoc-openapi-ui</artifactId>
       <version>1.7.0</version>
     </dependency>
+
   </dependencies>
 
   <build>
@@ -87,8 +88,8 @@
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-compiler-plugin</artifactId>
         <configuration>
-          <source>15</source>
-          <target>15</target>
+          <source>17</source>
+          <target>17</target>
         </configuration>
       </plugin>
     </plugins>

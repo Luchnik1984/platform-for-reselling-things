@@ -18,14 +18,14 @@ public class SwaggerConfig {
                         .title("Платформа по перепродаже вещей - API")
                         .version("1.0.0")
                         .description("""
-                               ## REST API для дипломного проекта
+                               REST API для дипломного проекта
                               \s
-                               ## Команда проекта
-                               **Гребнев Артём**
-                               **Лучник Иван**
-                               **Шакурова Дарья**
+                               ==Команда проекта==
+                               Гребнев Артём
+                               Лучник Иван
+                               Шакурова Дарья
                               \s
-                               **GitHub:**\s
+                               GitHub:\s
                                https://github.com/Luchnik1984/platform-for-reselling-things
                        \s"""))
 

@@ -26,7 +26,8 @@ public class WebSecurityConfig {
             "/api-docs.yaml",
             "/webjars/**",
             "/login",
-            "/register"
+            "/register",
+            "/error"
     };
 
     @Bean
