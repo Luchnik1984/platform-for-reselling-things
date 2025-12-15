@@ -1,0 +1,90 @@
+graph TB
+%% Frontend
+    FE[Frontend React<br/>Порт 3000]
+
+%% Controllers
+    subgraph "Контроллеры"
+        AC[AuthController<br/>/login, /register]
+        UC[UserController<br/>/users/**]
+        ADC[AdController<br/>/ads/**]
+        CC[CommentController<br/>/comments/**]
+    end
+
+%% Services
+    subgraph "Сервисы"
+        AS[AuthService]
+        US[UserService]
+        ADS[AdService]
+        CS[CommentService]
+        IS[ImageService]
+    end
+
+%% Repositories
+    subgraph "Репозитории"
+        UR[UserRepository]
+        AR[AdRepository]
+        CR[CommentRepository]
+    end
+
+%% Database
+    DB[(PostgreSQL<br/>Основная БД)]
+    H2[(H2<br/>Тестовая БД)]
+
+%% DTO & Mappers
+subgraph "Вспомогательные слои"
+DTO[DTO объекты<br/>Login, User, Ad, Comment]
+MAP[Мапперы<br/>Entity <--> DTO]
+end
+
+%% Security
+SEC[Spring Security<br/>Basic Auth + CORS]
+
+%% Data Flow
+FE --> SEC
+SEC --> AC
+SEC --> UC
+SEC --> ADC
+SEC --> CC
+
+AC --> AS
+UC --> US
+ADC --> ADS
+CC --> CS
+
+AS --> UR
+US --> UR
+US --> IS
+ADS --> AR
+ADS --> IS
+CS --> CR
+
+UR --> DB
+UR --> H2
+AR --> DB
+AR --> H2
+CR --> DB
+CR --> H2
+
+AC -.-> DTO
+UC -.-> DTO
+ADC -.-> DTO
+CC -.-> DTO
+
+AS -.-> MAP
+US -.-> MAP
+ADS -.-> MAP
+CS -.-> MAP
+
+MAP -.-> DTO
+MAP -.-> UR
+MAP -.-> AR
+MAP -.-> CR
+
+
+class FE frontend
+class SEC security
+class AC,UC,ADC,CC controller
+class AS,US,ADS,CS,IS service
+class UR,AR,CR repository
+class DB,H2 database
+class DTO,MAP helper
