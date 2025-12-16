@@ -62,14 +62,15 @@ public class AdController {
             )
     )
     @GetMapping
-    public ResponseEntity<Ads> getAllAds() {
-        log.info("Был вызван метод контроллера getAllAds для получения всех объявлений");
+    public Ads getAllAds() {
+        log.info("Был вызван метод контроллера getAllAds");
         Ads emptyAdsList = new Ads();
         emptyAdsList.setCount(0);
         emptyAdsList.setResults(List.of());
 
-        return ResponseEntity.ok(emptyAdsList);
+        return emptyAdsList;
     }
+
 
     /**
      * Получение полной информации об объявлении по его уникальному идентификатору (ID).
@@ -105,8 +106,8 @@ public class AdController {
             )
     })
     @GetMapping("/{id}") // Обрабатывает GET запросы по пути '/ads/{id}', где {id} - переменная пути
-    public ResponseEntity<ExtendedAd> getAd(@PathVariable("id") Integer id) { /// @PathVariable связывает {id} из URL с параметром метода
-        log.info("Был вызван метод контроллера getAd для получения объявления с ID = {}", id);
+    public ExtendedAd getAd(@PathVariable("id") Integer id) { /// @PathVariable связывает {id} из URL с параметром метода
+        log.info("Был вызван метод контроллера getAd для ID = {}", id);
 
         // Заглушка создаём и возвращаем объект ExtendedAd с тестовыми данными.
         // В реальной реализации здесь будет поиск в базе данных по переданному 'id'.
@@ -121,7 +122,7 @@ public class AdController {
         extendedAdStub.setEmail("stub@example.com");
         extendedAdStub.setPhone("+7 (000) 000-00-00");
 
-        return ResponseEntity.ok(extendedAdStub);
+        return extendedAdStub;
     }
 
     /**
@@ -149,7 +150,7 @@ public class AdController {
             )
     )
     @GetMapping("/me")
-    public ResponseEntity<Ads> getAdsMe() {
+    public Ads getAdsMe() {
         log.info("Был вызван метод контроллера getAdsMe для получения объявлений текущего пользователя");
         // Заглушка - создаёт и возвращает пустой объект Ads.
         // В дальнейшем здесь должна быть логика извлечения ID текущего пользователя.
@@ -157,7 +158,7 @@ public class AdController {
         myEmptyAdsList.setCount(0);
         myEmptyAdsList.setResults(List.of());
 
-        return ResponseEntity.ok(myEmptyAdsList);
+        return myEmptyAdsList;
     }
 
     /**
@@ -268,7 +269,7 @@ public class AdController {
             @ApiResponse(responseCode = "404", description = "Not Found - объявление не найдено", content = @Content(schema = @Schema(hidden = true)))
     })
     @PatchMapping("/{id}")
-    public ResponseEntity<Ad> updateAd(@PathVariable("id") Integer id,
+    public Ad updateAd(@PathVariable("id") Integer id,
                                        @RequestBody CreateOrUpdateAd updateData) {
         log.info("Был вызван метод updateAd для обновления объявления с ID={}. Новые данные: {}", id, updateData);
 
@@ -283,7 +284,7 @@ public class AdController {
         updatedAdStub.setImage("/images/ads/" + id + ".jpg"); // Фиктивная ссылка на изображение
 
         log.debug("Заглушка updateAd вернёт объект: {}", updatedAdStub);
-        return ResponseEntity.ok(updatedAdStub);
+        return updatedAdStub;
     }
 
     /**
@@ -340,7 +341,6 @@ public class AdController {
      * На первом этапе это заглушка, которая имитирует успешное удаление.
      *
      * @param id (path variable) ID объявления, которое требуется удалить.
-     * @return {@link ResponseEntity} со статусом 204 (No Content) и пустым телом.
      *         В случае попытки удаления несуществующего объявления (в будущем) будет возвращён 404.
      *         В случае попытки удаления чужого объявления (в будущем) будет возвращён 403.
      */
@@ -356,15 +356,14 @@ public class AdController {
             @ApiResponse(responseCode = "403", description = "Forbidden - попытка удалить чужое объявление", content = @Content(schema = @Schema(hidden = true))),
             @ApiResponse(responseCode = "404", description = "Not Found - объявление не найдено", content = @Content(schema = @Schema(hidden = true)))
     })
-    @DeleteMapping("/{id}") // Обрабатывает DELETE запросы на путь '/ads/{id}'
-    public ResponseEntity<Void> deleteAd(@PathVariable("id") Integer id) {
-        log.info("Был вызван метод deleteAd для удаления объявления с ID={}", id);
+    @DeleteMapping("/{id}")
+    public void  deleteAd(@PathVariable("id") Integer id) {
+        log.info("Был вызван метод deleteAd для ID={}", id);
 
         // Заглушка.
         // Пока просто логируем факт "удаления" и возвращаем успешный статус.
         log.debug("Заглушка: объявление с ID={} помечено как удалённое", id);
 
-        return ResponseEntity.noContent().build();
     }
 
 }
