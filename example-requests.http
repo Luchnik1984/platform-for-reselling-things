@@ -40,7 +40,7 @@ Content-Type: application/json
 Authorization: Basic user@gmail.com password
 
 {
-  "phone": "33333",
+  "phone": "+79001234567",
   "lastName": "Ivanov",
   "firstName": "Ivan"
 }
