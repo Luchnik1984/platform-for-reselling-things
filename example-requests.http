@@ -1,22 +1,22 @@
-GET http://localhost:8080/ads/1/comments
-Content-Type: application/json
-Authorization: Basic user@gmail.com password
 
-###
+
+### 1.1 АВТОРИЗАЦИЯ
 POST http://localhost:8080/login
 Content-Type: application/json
 
 {
-  "username": "user@gmail.com",
+  "username": "user@gmail3.com",
   "password": "password"
 }
 
-###
+
+###1.2 РЕГИСТРАЦИЯ
+
 POST http://localhost:8080/register
 Content-Type: application/json
 
 {
-  "username": "user@gmail.com",
+  "username": "user@gmail3.com",
   "password": "password",
   "firstName": " asdad",
   "lastName": " asdad",
@@ -24,58 +24,148 @@ Content-Type: application/json
   "role": "USER"
 }
 
-###
+
+
+### 2.1 Получение всех объявлений
+GET http://localhost:8080/ads
+Content-Type: application/json
+Authorization: Basic user@gmail.com password
+
+### 2.2 Создание нового объявления (MULTIPART! с текстовым файлом)
+POST http://localhost:8080/ads
+Content-Type: multipart/form-data; boundary=AdCreateBoundary
+Authorization: Basic user@gmail.com password
+
+--AdCreateBoundary
+Content-Disposition: form-data; name="properties"
+Content-Type: application/json
+
+{
+  "title": "Продам 123",
+  "price": 123,
+  "description": "Совсем новый 123"
+}
+
+--AdCreateBoundary
+Content-Disposition: form-data; name="image"; filename="test-image.txt"
+Content-Type: text/plain
+
+Тестовый файл-заглушка вместо изображения.
+Используется для тестирования multipart/form-data эндпоинтов на этапе разработки.
+
+--AdCreateBoundary--
+
+### 2.3 Получение информации об объявлении по ID
+GET http://localhost:8080/ads/123
+Authorization: Basic user@gmail.com password
+
+### 2.4 Удаление объявления по ID
+DELETE http://localhost:8080/ads/123
+Authorization: Basic user@gmail.com password
+
+### 2.5 Обновление информации об объявлении
+PATCH http://localhost:8080/ads/123
+Authorization: Basic user@gmail.com password
+Content-Type: application/json
+
+{
+  "title": "Новый заголовок",
+  "price": 444,
+  "description": "Обновлённое описание"
+}
+
+### 2.6 Получение объявлений текущего пользователя
 GET http://localhost:8080/ads/me
 Content-Type: application/json
 Authorization: Basic user@gmail.com password
 
-###
+### 2.7 Обновление картинки объявления (MULTIPART с текстовым файлом)
+PATCH http://localhost:8080/ads/123/image
+Authorization: Basic user@gmail.com password
+Content-Type: multipart/form-data; boundary=AdImageUpdateBoundary
+
+--AdImageUpdateBoundary
+Content-Disposition: form-data; name="image"; filename="updated-test-image.txt"
+Content-Type: text/plain
+
+Тестовый файл-заглушка вместо изображения.
+Используется для тестирования multipart/form-data эндпоинтов на этапе разработки.
+
+--AdImageUpdateBoundary--
+
+
+
+## 3. ПОЛЬЗОВАТЕЛИ ( UserController)
+
+### 3.1 Получение информации о текущем пользователе
 GET http://localhost:8080/users/me
 Content-Type: application/json
 Authorization: Basic user@gmail.com password
 
-###
+### 3.2 Обновление информации о пользователе
 PATCH http://localhost:8080/users/me
 Content-Type: application/json
 Authorization: Basic user@gmail.com password
 
 {
-  "phone": "+79001234567",
+  "firstName": "Ivan",
   "lastName": "Ivanov",
-  "firstName": "Ivan"
+  "phone": "+79001234567"
 }
 
-###
-GET http://localhost:8080/ads
-Content-Type: application/json
-Authorization: Basic user@gmail.com password
-
-###
+### 3.3 Смена пароля
 POST http://localhost:8080/users/set_password
 Content-Type: application/json
 Authorization: Basic user@gmail.com password
 
 {
   "newPassword": "password",
-  "currentPassword": "password1"
+  "currentPassword": "password123"
 }
 
-###
-POST http://localhost:8080/ads
-Content-Type: multipart/form-data; boundary=WebAppBoundary
+### 3.4 Обновление аватара пользователя (MULTIPART!)
+PATCH http://localhost:8080/users/me/image
+Authorization: Basic user@gmail.com password
+Content-Type: multipart/form-data; boundary=UserAvatarBoundary
+
+--UserAvatarBoundary
+Content-Disposition: form-data; name="image"; filename="avatar-stub.txt"
+Content-Type: text/plain
+
+Тестовый файл-заглушка вместо изображения.
+Используется для тестирования multipart/form-data эндпоинтов на этапе разработки..
+
+--UserAvatarBoundary--
+
+
+
+## 4. КОММЕНТАРИИ (CommentController)
+
+### 4.1 Получение комментариев объявления
+GET http://localhost:8080/ads/1/comments
+Content-Type: application/json
 Authorization: Basic user@gmail.com password
 
---WebAppBoundary
-Content-Disposition: form-data; name="properties"
+### 4.2 Добавление комментария к объявлению
+POST http://localhost:8080/ads/1/comments
+Authorization: Basic user@gmail.com password
 Content-Type: application/json
 
 {
-  "price": 123,
-  "description": "123",
-  "title": "123"
+  "text": "Комментарий к объявлению"
 }
 
---WebAppBoundary
-Content-Disposition: form-data; name="image"; filename="test.txt"
-Content-Type: text/plain
+### 4.3 Удаление комментария
+DELETE http://localhost:8080/ads/1/comments/1
+Authorization: Basic user@gmail.com password
+
+### 4.4 Обновление комментария
+PATCH http://localhost:8080/ads/1/comments/1
+Authorization: Basic user@gmail.com password
+Content-Type: application/json
+
+{
+  "text": "Обновлённый текст комментария"
+}
+
 
