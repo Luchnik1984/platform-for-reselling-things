@@ -22,6 +22,7 @@ Content-Type: application/json
   "password": "test12345"
 }
 
+
 ### 2.1 Получение всех объявлений
 ## 2. Объявления (AdController)
 GET http://localhost:8080/ads
