@@ -13,6 +13,7 @@ Content-Type: application/json
 ###1.2 РЕГИСТРАЦИЯ
 
 POST http://localhost:8080/register
+
 Content-Type: application/json
 
 {
@@ -25,8 +26,8 @@ Content-Type: application/json
 }
 
 
-
 ### 2.1 Получение всех объявлений
+## 2. Объявления (AdController)
 GET http://localhost:8080/ads
 Content-Type: application/json
 Authorization: Basic user@gmail.com password
@@ -167,6 +168,5 @@ Content-Type: application/json
 {
   "text": "Обновлённый текст комментария"
 }
-
 
 
