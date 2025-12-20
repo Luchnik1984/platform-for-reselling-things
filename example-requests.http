@@ -1,41 +1,37 @@
 
+###1.1 РЕГИСТРАЦИЯ
 
-### 1.1 АВТОРИЗАЦИЯ
+POST http://localhost:8080/register
+Content-Type: application/json
+
+{
+"username": "test@example1.com",
+"password": "test12345",
+"firstName": " Test",
+"lastName": " User",
+"phone": " ++79991112233",
+"role": "USER"
+}
+
+### 1.2 АВТОРИЗАЦИЯ
 POST http://localhost:8080/login
 Content-Type: application/json
 
 {
-  "username": "user@gmail3.com",
-  "password": "password"
+  "username": "test@example1.com",
+  "password": "test12345"
 }
-
-
-###1.2 РЕГИСТРАЦИЯ
-
-POST http://localhost:8080/register
-
-Content-Type: application/json
-
-{
-  "username": "user@gmail3.com",
-  "password": "password",
-  "firstName": " asdad",
-  "lastName": " asdad",
-  "phone": " asdad",
-  "role": "USER"
-}
-
 
 ### 2.1 Получение всех объявлений
 ## 2. Объявления (AdController)
 GET http://localhost:8080/ads
 Content-Type: application/json
-Authorization: Basic user@gmail.com password
+Authorization: Basic test@example1.com test12345
 
 ### 2.2 Создание нового объявления (MULTIPART! с текстовым файлом)
 POST http://localhost:8080/ads
 Content-Type: multipart/form-data; boundary=AdCreateBoundary
-Authorization: Basic user@gmail.com password
+Authorization: Basic test@example1.com test12345
 
 --AdCreateBoundary
 Content-Disposition: form-data; name="properties"
@@ -58,15 +54,15 @@ Content-Type: text/plain
 
 ### 2.3 Получение информации об объявлении по ID
 GET http://localhost:8080/ads/123
-Authorization: Basic user@gmail.com password
+Authorization: Basic test@example1.com test12345
 
 ### 2.4 Удаление объявления по ID
 DELETE http://localhost:8080/ads/123
-Authorization: Basic user@gmail.com password
+Authorization: Basic test@example1.com test12345
 
 ### 2.5 Обновление информации об объявлении
 PATCH http://localhost:8080/ads/123
-Authorization: Basic user@gmail.com password
+Authorization: Basic test@example1.com test12345
 Content-Type: application/json
 
 {
@@ -78,11 +74,11 @@ Content-Type: application/json
 ### 2.6 Получение объявлений текущего пользователя
 GET http://localhost:8080/ads/me
 Content-Type: application/json
-Authorization: Basic user@gmail.com password
+Authorization: Basic test@example1.com test12345
 
 ### 2.7 Обновление картинки объявления (MULTIPART с текстовым файлом)
 PATCH http://localhost:8080/ads/123/image
-Authorization: Basic user@gmail.com password
+Authorization: Basic test@example1.com test12345
 Content-Type: multipart/form-data; boundary=AdImageUpdateBoundary
 
 --AdImageUpdateBoundary
@@ -101,12 +97,12 @@ Content-Type: text/plain
 ### 3.1 Получение информации о текущем пользователе
 GET http://localhost:8080/users/me
 Content-Type: application/json
-Authorization: Basic user@gmail.com password
+Authorization: Basic test@example1.com test12345
 
 ### 3.2 Обновление информации о пользователе
 PATCH http://localhost:8080/users/me
 Content-Type: application/json
-Authorization: Basic user@gmail.com password
+Authorization: Basic test@example1.com test12345
 
 {
   "firstName": "Ivan",
@@ -117,7 +113,7 @@ Authorization: Basic user@gmail.com password
 ### 3.3 Смена пароля
 POST http://localhost:8080/users/set_password
 Content-Type: application/json
-Authorization: Basic user@gmail.com password
+Authorization: Basic test@example1.com test12345
 
 {
   "newPassword": "password",
@@ -145,11 +141,11 @@ Content-Type: text/plain
 ### 4.1 Получение комментариев объявления
 GET http://localhost:8080/ads/1/comments
 Content-Type: application/json
-Authorization: Basic user@gmail.com password
+Authorization: Basic test@example.com test12345
 
 ### 4.2 Добавление комментария к объявлению
 POST http://localhost:8080/ads/1/comments
-Authorization: Basic user@gmail.com password
+Authorization: Basic test@example.com test12345
 Content-Type: application/json
 
 {
@@ -158,11 +154,11 @@ Content-Type: application/json
 
 ### 4.3 Удаление комментария
 DELETE http://localhost:8080/ads/1/comments/1
-Authorization: Basic user@gmail.com password
+Authorization: Basic test@example.com test12345
 
 ### 4.4 Обновление комментария
 PATCH http://localhost:8080/ads/1/comments/1
-Authorization: Basic user@gmail.com password
+Authorization: Basic test@example.com test12345
 Content-Type: application/json
 
 {
