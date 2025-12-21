@@ -10,14 +10,13 @@ import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 import ru.skypro.homework.dto.Login;
-import ru.skypro.homework.dto.Register;
 import ru.skypro.homework.service.AuthService;
 
 @Slf4j
 @CrossOrigin(value = "http://localhost:3000")
 @RestController
 @RequiredArgsConstructor
-@Tag(name = "Авторизация", description = "API для регистрации и входа пользователей")
+@Tag(name = "Авторизация", description = "API для авторизации пользователей")
 public class AuthController {
 
     private final AuthService authService;
@@ -36,22 +35,6 @@ public class AuthController {
         } else {
             // Нужно выбросить исключение или использовать @ResponseStatus
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED);
-        }
-    }
-
-    @Operation(
-            summary = "Регистрация пользователя",
-            description = "Создает нового пользователя в системе"
-    )
-    @ApiResponses(value = {
-            @ApiResponse(responseCode = "201", description = "Пользователь успешно создан"),
-            @ApiResponse(responseCode = "400", description = "Некорректные данные или пользователь уже существует")
-    })
-    @PostMapping("/register")
-    @ResponseStatus(HttpStatus.CREATED)
-    public void register(@RequestBody Register register) {
-        if (!authService.register(register)) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST);
         }
     }
 }
