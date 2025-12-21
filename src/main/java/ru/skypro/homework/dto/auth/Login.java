@@ -1,8 +1,12 @@
-package ru.skypro.homework.dto;
+package ru.skypro.homework.dto.auth;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 
+/**
+ * DTO для авторизации пользователя.
+ * Содержит данные: логин пользователя, пароль пользователя.
+ */
 @Data
 public class Login {
 

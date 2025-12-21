@@ -10,7 +10,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
-import ru.skypro.homework.dto.Register;
+import ru.skypro.homework.dto.reg.Register;
 import ru.skypro.homework.service.RegService;
 
 @Slf4j
