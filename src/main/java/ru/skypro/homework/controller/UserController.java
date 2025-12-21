@@ -31,7 +31,7 @@ import java.util.UUID;
 @RestController
 @RequiredArgsConstructor
 @Tag(name = "Пользователи", description = "API для работы с аккаунтами пользователей")
-@RequestMapping("/user")
+@RequestMapping("/users")
 public class UserController {
 
     /**
@@ -105,7 +105,7 @@ public class UserController {
     })
     @PatchMapping("/me")
     public ResponseEntity<UpdateUser> updateUser(@RequestBody UpdateUser updateUser) {
-
+        log.info("Был вызван метод контроллера updateUser");
         return ResponseEntity.ok(updateUser);
     }
 
@@ -124,6 +124,8 @@ public class UserController {
     @ResponseStatus(HttpStatus.OK)
     @PatchMapping("/me/image")
     public void updateUserImage(@RequestPart("image") MultipartFile image ){
+
+        log.info("Был вызван метод контроллера updateUserImage");
 
     }
 }
