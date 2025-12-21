@@ -9,7 +9,7 @@ import lombok.Data;
  * Содержит данные: имя, фамилия, телефон.
  */
 @Data
-public class UpdateUse {
+public class UpdateUser {
 
     @Schema(description = "Имя пользователя",
             example = "Иван",
