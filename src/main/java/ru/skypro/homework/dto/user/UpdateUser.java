@@ -1,22 +1,15 @@
-package ru.skypro.homework.dto;
+package ru.skypro.homework.dto.user;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 
+
+/**
+ * DTO для обновления информации об авторизованном пользователе.
+ * Содержит данные: имя, фамилия, телефон.
+ */
 @Data
-public class Register {
-
-    @Schema(description = "Логин пользователя",
-            example = "user@example.com",
-            minLength = 4,
-            maxLength = 32)
-    private String username;
-
-    @Schema(description = "Пароль пользователя",
-            example = "password123",
-            minLength = 8,
-            maxLength = 16)
-    private String password;
+public class UpdateUser {
 
     @Schema(description = "Имя пользователя",
             example = "Иван",
@@ -35,8 +28,4 @@ public class Register {
             pattern = "\\+7\\s?\\(?\\d{3}\\)?\\s?\\d{3}-?\\d{2}-?\\d{2}")
     private String phone;
 
-    @Schema(description = "Роль пользователя",
-            example = "USER",
-            allowableValues = {"USER", "ADMIN"})
-    private Role role;
 }
