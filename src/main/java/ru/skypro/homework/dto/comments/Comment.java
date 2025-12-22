@@ -1,11 +1,10 @@
 package ru.skypro.homework.dto.comments;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
+import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.time.Instant;
 
 /**
  * DTO для передачи информации о комментарии к объявлению.
@@ -21,35 +20,59 @@ import java.time.Instant;
 public class Comment {
 
     /**
-     * Отображаемое имя автора комментария.
+     * ID автора комментария.
+     * В OpenAPI: type: integer, format: int32
+     * Это не имя, а именно числовой идентификатор!
      */
-    private String author;
+
+    @Schema(
+            description = "id автора комментария",
+            example = "1",
+            accessMode = Schema.AccessMode.READ_ONLY
+    )
+    private Integer author;
 
     /**
-     * URL аватарки автора комментария.
+     * Ссылка на аватар автора.
      */
-    @JsonProperty("authorImage")
+    @Schema(
+            description = "ссылка на аватар автора комментария",
+            example = "/images/users/1-avatar.jpg",
+            accessMode = Schema.AccessMode.READ_ONLY
+    )
     private String authorImage;
 
     /**
-     * Имя автора комментария.
+     * Имя автора для отображения.
      */
-    @JsonProperty("authorFirstName")
+    @Schema(
+            description = "имя создателя комментария",
+            example = "Иван",
+            accessMode = Schema.AccessMode.READ_ONLY
+    )
     private String authorFirstName;
 
     /**
-     * Момент создания комментария (временная метка).
+     * Время создания в миллисекундах.
+     * В OpenAPI: type: integer, format: int64
+     * Миллисекунды - большое число (Long)
      */
-    @JsonProperty("createdAt")
-    private Instant createdAt;
+    @Schema(description = "дата и время создания комментария в миллисекундах",
+            example = "1644355200000")
+    private Long createdAt;
 
     /**
-     * Первичный ключ комментария.
+     * ID комментария.
      */
+    @Schema(
+            description = "id комментария",
+            example = "1",
+            accessMode = Schema.AccessMode.READ_ONLY)
     private Integer pk;
 
-    /**
-     * Текст комментария.
-     */
+    @Schema(
+            description = "текст комментария",
+            example = "Отличный товар, рекомендую!",
+            accessMode = Schema.AccessMode.READ_ONLY)
     private String text;
 }

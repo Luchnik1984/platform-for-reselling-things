@@ -13,10 +13,10 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
-import ru.skypro.homework.dto.Ad;
-import ru.skypro.homework.dto.Ads;
-import ru.skypro.homework.dto.CreateOrUpdateAd;
-import ru.skypro.homework.dto.ExtendedAd;
+import ru.skypro.homework.dto.Ads.Ad;
+import ru.skypro.homework.dto.Ads.Ads;
+import ru.skypro.homework.dto.Ads.CreateOrUpdateAd;
+import ru.skypro.homework.dto.Ads.ExtendedAd;
 
 import java.util.List;
 import java.util.Random;
@@ -46,7 +46,7 @@ public class AdController {
      * На первом этапе возвращает пустой список с нулевым счётчиком.
      *
      * @return {@link ResponseEntity} со статусом 200 (OK) и DTO {@link Ads},
-     *         содержащего пустой список объявлений и общее количество, равное 0.
+     * содержащего пустой список объявлений и общее количество, равное 0.
      */
     @Operation(
             summary = "Получение всех объявлений",
@@ -64,13 +64,12 @@ public class AdController {
     @GetMapping
     public Ads getAllAds() {
         log.info("Был вызван метод контроллера getAllAds");
-        Ads emptyAdsList = new Ads();
-        emptyAdsList.setCount(0);
-        emptyAdsList.setResults(List.of());
+        Ads adsList = new Ads();
+        adsList.setCount(0);
+        adsList.setResults(List.of());
 
-        return emptyAdsList;
+        return adsList;
     }
-
 
     /**
      * Получение полной информации об объявлении по его уникальному идентификатору (ID).
@@ -81,9 +80,9 @@ public class AdController {
      * @param id (path variable) - числовой идентификатор объявления, передаваемый в пути URL.
      *           Аннотация {@link PathVariable} извлекает значение из сегмента пути {id}.
      * @return {@link ResponseEntity} со статусом 200 (OK) и DTO {@link ExtendedAd},
-     *         содержащего детальную информацию об объявлении.
-     *         ! В будущей реализации:
-     *         Если объявление не найдено, будет возвращён статус 404 (Not Found).
+     * содержащего детальную информацию об объявлении.
+     * ! В будущей реализации:
+     * Если объявление не найдено, будет возвращён статус 404 (Not Found).
      */
     @Operation(
             summary = "Получение информации об объявлении",
@@ -105,18 +104,17 @@ public class AdController {
                     content = @Content(schema = @Schema(hidden = true))
             )
     })
-    @GetMapping("/{id}") // Обрабатывает GET запросы по пути '/ads/{id}', где {id} - переменная пути
-    public ExtendedAd getAd(@PathVariable("id") Integer id) { /// @PathVariable связывает {id} из URL с параметром метода
+    @GetMapping("/{id}")
+    public ExtendedAd getAd(@PathVariable("id") Integer id) {
         log.info("Был вызван метод контроллера getAd для ID = {}", id);
 
         // Заглушка создаём и возвращаем объект ExtendedAd с тестовыми данными.
-        // В реальной реализации здесь будет поиск в базе данных по переданному 'id'.
         ExtendedAd extendedAdStub = new ExtendedAd();
-        extendedAdStub.setPk(id); // Используем переданный ID для наглядности
+        extendedAdStub.setPk(id);
         extendedAdStub.setTitle("Тестовое объявление");
         extendedAdStub.setPrice(9999);
-        extendedAdStub.setDescription("Это детальное описание тестового объявления, созданного на этапе разработки.");
-        extendedAdStub.setImage("/images/stub.jpg");
+        extendedAdStub.setDescription("Это детальное описание тестового объявления.");
+        extendedAdStub.setImage("/images/ads/" + id + ".jpg");
         extendedAdStub.setAuthorFirstName("Имя");
         extendedAdStub.setAuthorLastName("Фамилия");
         extendedAdStub.setEmail("stub@example.com");
@@ -134,7 +132,7 @@ public class AdController {
      * который можно получить из контекста безопасности.
      *
      * @return {@link ResponseEntity} со статусом 200 (OK) и DTO {@link Ads},
-     *         содержащего пустой список объявлений.
+     * содержащего пустой список объявлений.
      */
     @Operation(
             summary = "Получение объявлений авторизованного пользователя",
@@ -153,12 +151,11 @@ public class AdController {
     public Ads getAdsMe() {
         log.info("Был вызван метод контроллера getAdsMe для получения объявлений текущего пользователя");
         // Заглушка - создаёт и возвращает пустой объект Ads.
-        // В дальнейшем здесь должна быть логика извлечения ID текущего пользователя.
-        Ads myEmptyAdsList = new Ads();
-        myEmptyAdsList.setCount(0);
-        myEmptyAdsList.setResults(List.of());
+        Ads adsList = new Ads();
+        adsList.setCount(0);
+        adsList.setResults(List.of());
 
-        return myEmptyAdsList;
+        return adsList;
     }
 
     /**
@@ -176,11 +173,11 @@ public class AdController {
      * @param properties DTO {@link CreateOrUpdateAd}, содержащий заголовок, описание и цену.
      *                   Аннотация {@link RequestPart} связывает часть multipart-запроса с именем "properties"
      *                   (как указано в OpenAPI) с этим параметром. Spring автоматически преобразует JSON в объект.
-     * @param image Файл изображения для объявления.
-     *              Аннотация {@link RequestPart} связывает часть multipart-запроса с именем "image" с этим параметром.
+     * @param image      Файл изображения для объявления.
+     *                   Аннотация {@link RequestPart} связывает часть multipart-запроса с именем "image" с этим параметром.
      * @return {@link ResponseEntity} со статусом 201 (Created) и телом в виде DTO {@link Ad},
-     *         содержащего данные созданного объявления (включая сгенерированный ID и ссылку на изображение).
-     *         В заголовке 'Location' ответа в будущем должен быть URL созданного ресурса.
+     * содержащего данные созданного объявления (включая сгенерированный ID и ссылку на изображение).
+     * В заголовке 'Location' ответа в будущем должен быть URL созданного ресурса.
      */
     @Operation(
             summary = "Добавление объявления",
@@ -215,13 +212,14 @@ public class AdController {
                 "Заголовок: {}, размер файла: {} байт", properties.getTitle(), image.getSize());
 
         // Заглушка создаёт и возвращает объект Ad.
-        // В дельнейшем здесь должна быть логика: сохранение файла, работа с БД.
         Ad createdAdStub = new Ad();
+
         // Генерируем фиктивный, случайный ID
-        createdAdStub.setPk(new Random().nextInt(10000)+1);
+        createdAdStub.setPk(new Random().nextInt(10000) + 1);
         createdAdStub.setAuthor(1); // Фиктивный ID автора.
         createdAdStub.setTitle(properties.getTitle());
         createdAdStub.setPrice(properties.getPrice());
+
         // Фиктивная ссылка на изображение. В будущем - путь к сохранённому файлу.
         createdAdStub.setImage("/images/ads/" + createdAdStub.getPk() + "-stub.jpg");
 
@@ -241,13 +239,13 @@ public class AdController {
      * на основе входящих данных, полями title и price, но с фиктивными значениями
      * для остальных полей (pk, author, image).
      *
-     * @param id (path variable) ID объявления, которое требуется обновить.
+     * @param id         (path variable) ID объявления, которое требуется обновить.
      * @param updateData DTO {@link CreateOrUpdateAd} с новыми значениями полей.
      *                   Аннотация {@link RequestBody} указывает, что данные приходят в теле запроса в формате JSON.
      * @return {@link ResponseEntity} со статусом 200 (OK) и DTO {@link Ad},
-     *         содержащего данные обновлённого объявления.
-     *         В случае попытки обновления несуществующего объявления (в будущем) будет возвращён 404.
-     *         В случае попытки обновления чужого объявления (в будущем) будет возвращён 403.
+     * содержащего данные обновлённого объявления.
+     * В случае попытки обновления несуществующего объявления (в будущем) будет возвращён 404.
+     * В случае попытки обновления чужого объявления (в будущем) будет возвращён 403.
      */
     @Operation(
             summary = "Обновление информации об объявлении",
@@ -270,7 +268,7 @@ public class AdController {
     })
     @PatchMapping("/{id}")
     public Ad updateAd(@PathVariable("id") Integer id,
-                                       @RequestBody CreateOrUpdateAd updateData) {
+                       @RequestBody CreateOrUpdateAd updateData) {
         log.info("Был вызван метод updateAd для обновления объявления с ID={}. Новые данные: {}", id, updateData);
 
         // Заглушка создаёт объект Ad, имитируя успешно обновлённое объявление.
@@ -296,11 +294,11 @@ public class AdController {
      * вернём статус 200 OK, подтверждающий успешную загрузку.
      * На этапе заглушки метод логирует факт вызова и возвращает успешный статус.
      *
-     * @param id (path variable) ID объявления, для которого обновляется изображение.
+     * @param id    (path variable) ID объявления, для которого обновляется изображение.
      * @param image Новый файл изображения, передаваемый как часть multipart-запроса.
      * @return {@link ResponseEntity} со статусом 200 (OK) и пустым телом.
-     *         В будущем, при реализации, может возвращать обновлённые байты изображения
-     *         или ссылку на него.
+     * В будущем, при реализации, может возвращать обновлённые байты изображения
+     * или ссылку на него.
      */
     @Operation(
             summary = "Обновление картинки объявления",
@@ -320,16 +318,11 @@ public class AdController {
         log.info("Был вызван метод updateAdImage для обновления изображения объявления ID={}. " +
                 "Имя файла: {}, размер: {} байт", id, image.getOriginalFilename(), image.getSize());
 
-        // ПоказЗаглушка. В дельнейшем нужно будет реализовать:
-        // 1. Проверку прав доступа к объявлению с ID = id.
-        // 2. Удаление старого файла изображения (если есть).
-        // 3. Сохранение нового файла 'image'.
-        // 4. Обновление ссылки на изображение в сущности 'Ad' в БД.
+        // Пока заглушка. В дельнейшем нужно будет реализовать:
         log.debug("Заглушка: файл '{}' для объявления ID={} принят и условно сохранён.",
                 image.getOriginalFilename(), id);
 
         // Возвращаем статус 200 OK, подтверждающий успешный приём файла.
-        // Можно также вернуть ResponseEntity.ok().build();
         return ResponseEntity.ok().build();
     }
 
@@ -341,8 +334,8 @@ public class AdController {
      * На первом этапе это заглушка, которая имитирует успешное удаление.
      *
      * @param id (path variable) ID объявления, которое требуется удалить.
-     *         В случае попытки удаления несуществующего объявления (в будущем) будет возвращён 404.
-     *         В случае попытки удаления чужого объявления (в будущем) будет возвращён 403.
+     *           В случае попытки удаления несуществующего объявления (в будущем) будет возвращён 404.
+     *           В случае попытки удаления чужого объявления (в будущем) будет возвращён 403.
      */
     @Operation(
             summary = "Удаление объявления",
@@ -357,7 +350,7 @@ public class AdController {
             @ApiResponse(responseCode = "404", description = "Not Found - объявление не найдено", content = @Content(schema = @Schema(hidden = true)))
     })
     @DeleteMapping("/{id}")
-    public void  deleteAd(@PathVariable("id") Integer id) {
+    public void deleteAd(@PathVariable("id") Integer id) {
         log.info("Был вызван метод deleteAd для ID={}", id);
 
         // Заглушка.

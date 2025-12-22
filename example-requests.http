@@ -142,11 +142,11 @@ Content-Type: text/plain
 ### 4.1 Получение комментариев объявления
 GET http://localhost:8080/ads/1/comments
 Content-Type: application/json
-Authorization: Basic test@example.com test12345
+Authorization: Basic test@example1.com test12345
 
 ### 4.2 Добавление комментария к объявлению
 POST http://localhost:8080/ads/1/comments
-Authorization: Basic test@example.com test12345
+Authorization: Basic test@example1.com test12345
 Content-Type: application/json
 
 {
@@ -155,11 +155,11 @@ Content-Type: application/json
 
 ### 4.3 Удаление комментария
 DELETE http://localhost:8080/ads/1/comments/1
-Authorization: Basic test@example.com test12345
+Authorization: Basic test@example1.com test12345
 
 ### 4.4 Обновление комментария
 PATCH http://localhost:8080/ads/1/comments/1
-Authorization: Basic test@example.com test12345
+Authorization: Basic test@example1.com test12345
 Content-Type: application/json
 
 {

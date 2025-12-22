@@ -4,52 +4,64 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 import ru.skypro.homework.enums.Role;
 
-import java.util.UUID;
-
 
 /**
  * DTO для получения данных о пользователе.
+ * Используется в ответе GET /users/me.
  * Содержит данные: ID, логин, имя, фамилия, телефон, роль, ссылка на аватар пользователя.
  */
 @Data
 public class User {
 
     @Schema(description = "ID пользователя",
-            example = "user@example.com",
-            minLength = 4,
-            maxLength = 32)
-    private UUID id;
+            example = "1",
+            accessMode = Schema.AccessMode.READ_ONLY
+    )
+    private Integer id;
 
-    @Schema(description = "Логин пользователя",
+    /**
+     * Email (логин) пользователя.
+     * В OpenAPI: username в Register, но email в User
+     * Это нормально - на входе username, в ответе email
+     */
+    @Schema(
+            description = "Логин пользователя",
             example = "user@example.com",
-            minLength = 4,
-            maxLength = 32)
+            accessMode = Schema.AccessMode.READ_ONLY
+    )
     private String email;
 
-    @Schema(description = "Имя пользователя",
+    @Schema(
+            description = "Имя пользователя",
             example = "Иван",
-            minLength = 2,
-            maxLength = 16)
+            accessMode = Schema.AccessMode.READ_ONLY
+    )
     private String firstName;
 
-    @Schema(description = "Фамилия пользователя",
+    @Schema(
+            description = "Фамилия пользователя",
             example = "Иванов",
-            minLength = 2,
-            maxLength = 16)
+            accessMode = Schema.AccessMode.READ_ONLY
+    )
     private String lastName;
 
-    @Schema(description = "Телефон пользователя",
-            example = "+7 (999) 123-45-67",
-            pattern = "\\+7\\s?\\(?\\d{3}\\)?\\s?\\d{3}-?\\d{2}-?\\d{2}")
+    @Schema(
+            description = "Телефон пользователя",
+            accessMode = Schema.AccessMode.READ_ONLY
+    )
     private String phone;
 
-    @Schema(description = "Роль пользователя",
+    @Schema(
+            description = "Роль пользователя",
             example = "USER",
-            allowableValues = {"USER", "ADMIN"})
+            allowableValues = {"USER", "ADMIN"},
+            accessMode = Schema.AccessMode.READ_ONLY
+    )
     private Role role;
 
     @Schema(description = "Ссылка на аватар пользователя",
             example = "https://foni.papik.pro/uploads/posts/2024-09/thumbs/foni-papik-pro-if4w-p-kartinki-spanch-bob-na-prozrachnom-fone-1.png",
-            pattern = "(?:https?://)?(?:[a-z0-9\\-]+\\.)+[a-z]{2,}(?:/[\\w\\-./?%&=]*)?\\.(?:jpg|jpeg|png|gif|bmp|webp|svg)(?:\\?.*)?")
+            accessMode = Schema.AccessMode.READ_ONLY
+    )
     private String image;
 }

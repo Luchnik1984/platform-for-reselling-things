@@ -36,22 +36,23 @@
 - [x] `Login.java` - аутентификация
 - [x] `Register.java` - регистрация
 - [x] `Role.java` enum - роли пользователей
-- [ ] `NewPassword.java` - смена пароля
-- [ ] `User.java` - данные пользователя
-- [ ] `UpdateUser.java` - обновление профиля
+- [x] `NewPassword.java` - смена пароля
+- [x] `User.java` - данные пользователя
+- [x] `UpdateUser.java` - обновление профиля
 - [x] `Ad.java` - объявление
 - [x] `ExtendedAd.java` - детали объявления
 - [x] `Ads.java` - список объявлений
 - [x] `CreateOrUpdateAd.java` - создание/обновление
-- [ ] `Comment.java` - комментарий
-- [ ] `Comments.java` - список комментариев
-- [ ] `CreateOrUpdateComment.java` - создание/обновление
+- [x] `Comment.java` - комментарий
+- [x] `Comments.java` - список комментариев
+- [x] `CreateOrUpdateComment.java` - создание/обновление
 
 ### Контроллеры
-- [x] `AuthController.java` - /login, /register
-- [ ] `UserController.java` - /users/**
+- [x] `RegController` - /register
+- [x] `AuthController.java` - /login
+- [x] `UserController.java` - /users/**
 - [x] `AdController.java` - /ads/**
-- [ ] `CommentController.java` - /ads/*/comments/**
+- [x] `CommentController.java` - /ads/*/comments/**
 
 ##  Активные задачи
 
@@ -73,10 +74,16 @@
 - **US3.2:** Проверка CORS с фронтэндом *(Все участники)*
 - **US3.3:** Проверка Postman *(Лучник Иван)*
 
-## Завершено на этой неделе:
+## Завершено:
 - **US1.1:** Настройка Swagger/OpenAPI *(Лучник Иван)*
 - **US1.3:** DTO объявлений *(Лучник Иван)*
 - **US2.2:** AdController *(Лучник Иван)*
+- **US1.2:** DTO паролей и пользователей *(Гребнев Артём)*
+- **US1.4:** DTO комментариев *(Шакурова Дарья)*
+- **US2.1:** UserController *(Гребнев Артём)*
+- **US2.3:** CommentController *(Шакурова Дарья)*
+- **US3.2:** Проверка CORS с фронтэндом *(Все участники)*
+- **US3.3:** Проверка Postman *(Лучник Иван)*
 
 # Запуск проекта
 ### Требования:
@@ -119,10 +126,11 @@
 
 
 ##  Статистика проекта
-- **Эндпоинты:** 9/17 готово (53%)
-- **DTO:** 7/12 готово (58%)
-- **Контроллеры:** 2/4 готово (25%)
-- **Этап 1:** 3/10 UserStories (30%)
+- **ЭТАП 1:**
+- **Эндпоинты:** 17/17 готово (100%)
+- **DTO:** 12/12 готово (58%)
+- **Контроллеры:** 5/5 готово (100%)
+- **Этап 1:** 10/10 UserStories (100%)
 
 ##  Технологический стек
 - **Java 17**

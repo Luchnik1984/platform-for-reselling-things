@@ -13,18 +13,16 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
-import ru.skypro.homework.dto.Ad;
 import ru.skypro.homework.dto.user.NewPassword;
 import ru.skypro.homework.dto.user.UpdateUser;
 import ru.skypro.homework.dto.user.User;
 import ru.skypro.homework.enums.Role;
 
-import java.util.UUID;
-
 
 /**
  * Контроллер для работы с аккаунтами пользователей.
  * Предоставляет набор CRUD-операций
+ * На этапе 1 реализованы заглушки всех методов.
  */
 @Slf4j
 @CrossOrigin(value = "http://localhost:3000")
@@ -57,8 +55,6 @@ public class UserController {
 
     /**
      * Эндпоинт на получение информации об авторизованном пользователе
-     *
-     * @return
      */
     @Operation(
             summary = "Получение информации об авторизованном пользователе",
@@ -71,20 +67,22 @@ public class UserController {
             @ApiResponse(responseCode = "401", description = "Unauthorized: Требуется авторизация", content = @Content(schema = @Schema(hidden = true))),
     })
     @GetMapping("/me")
-    public ResponseEntity<User> getUser() {
+    @ResponseStatus(HttpStatus.OK)
+    public User getUser() {
 
         log.info("Был вызван метод контроллера getUser");
 
         //создаем заглушку
         User user = new User();
-        user.setId(UUID.randomUUID());
+        user.setId(1);
         user.setEmail("user@mail.com");
-        user.setPhone("+791347234923");
+        user.setPhone("+7 (913) 472-34-23");
         user.setRole(Role.USER);
         user.setFirstName("Name");
         user.setLastName("LastName");
+        user.setImage("/images/users/1-avatar.jpg");
 
-        return ResponseEntity.ok(user);
+        return user;
     }
 
     /**
@@ -104,13 +102,15 @@ public class UserController {
             @ApiResponse(responseCode = "401", description = "Unauthorized: Требуется авторизация", content = @Content(schema = @Schema(hidden = true))),
     })
     @PatchMapping("/me")
-    public ResponseEntity<UpdateUser> updateUser(@RequestBody UpdateUser updateUser) {
+    @ResponseStatus(HttpStatus.OK)
+    public UpdateUser updateUser(@RequestBody UpdateUser updateUser) {
         log.info("Был вызван метод контроллера updateUser");
-        return ResponseEntity.ok(updateUser);
+        return updateUser;
     }
 
     /**
      * Обновление аватара авторизованного пользователя
+     *
      * @param image : файл аватара
      */
     @Operation(
@@ -123,9 +123,16 @@ public class UserController {
     })
     @ResponseStatus(HttpStatus.OK)
     @PatchMapping("/me/image")
-    public void updateUserImage(@RequestPart("image") MultipartFile image ){
+    public ResponseEntity<Void> updateUserImage(@RequestPart("image") MultipartFile image) {
 
-        log.info("Был вызван метод контроллера updateUserImage");
+        log.info("Был вызван метод контроллера updateUserImage. " +
+                        "Имя файла: {}, размер: {} байт, тип: {}",
+                image.getOriginalFilename(),
+                image.getSize(),
+                image.getContentType());
+        log.debug("Заглушка: файл '{}' принят для обновления аватара",
+                image.getOriginalFilename());
 
+        return ResponseEntity.ok().build();
     }
 }
