@@ -13,10 +13,10 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
-import ru.skypro.homework.dto.Ads.Ad;
-import ru.skypro.homework.dto.Ads.Ads;
-import ru.skypro.homework.dto.Ads.CreateOrUpdateAd;
-import ru.skypro.homework.dto.Ads.ExtendedAd;
+import ru.skypro.homework.dto.ads.Ad;
+import ru.skypro.homework.dto.ads.Ads;
+import ru.skypro.homework.dto.ads.CreateOrUpdateAd;
+import ru.skypro.homework.dto.ads.ExtendedAd;
 
 import java.util.List;
 import java.util.Random;
@@ -150,7 +150,7 @@ public class AdController {
     @GetMapping("/me")
     public Ads getAdsMe() {
         log.info("Был вызван метод контроллера getAdsMe для получения объявлений текущего пользователя");
-        // Заглушка - создаёт и возвращает пустой объект Ads.
+        // Заглушка - создаёт и возвращает пустой объект ads.
         Ads adsList = new Ads();
         adsList.setCount(0);
         adsList.setResults(List.of());
