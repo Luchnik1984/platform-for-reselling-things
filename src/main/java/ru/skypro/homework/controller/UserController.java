@@ -18,6 +18,8 @@ import ru.skypro.homework.dto.user.UpdateUser;
 import ru.skypro.homework.dto.user.User;
 import ru.skypro.homework.enums.Role;
 
+import javax.validation.Valid;
+
 
 /**
  * Контроллер для работы с аккаунтами пользователей.
@@ -49,7 +51,7 @@ public class UserController {
 
     @PostMapping("/set_password")
     @ResponseStatus(HttpStatus.OK)
-    public void setPassword(@RequestBody NewPassword newPassword) {
+    public void setPassword(@Valid @RequestBody NewPassword newPassword) {
         log.info("Был вызван метод контроллера setPassword");
     }
 
@@ -103,7 +105,7 @@ public class UserController {
     })
     @PatchMapping("/me")
     @ResponseStatus(HttpStatus.OK)
-    public UpdateUser updateUser(@RequestBody UpdateUser updateUser) {
+    public UpdateUser updateUser(@Valid @RequestBody UpdateUser updateUser) {
         log.info("Был вызван метод контроллера updateUser");
         return updateUser;
     }

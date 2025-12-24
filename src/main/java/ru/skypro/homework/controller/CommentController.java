@@ -14,6 +14,7 @@ import ru.skypro.homework.dto.comments.Comment;
 import ru.skypro.homework.dto.comments.Comments;
 import ru.skypro.homework.dto.comments.CreateOrUpdateComment;
 
+import javax.validation.Valid;
 import java.util.List;
 
 /**
@@ -82,7 +83,7 @@ public class CommentController {
     @PostMapping("/{id}/comments")
     @ResponseStatus(HttpStatus.OK)
     public Comment addComment(@PathVariable("id") Integer id,
-                              @RequestBody CreateOrUpdateComment dto) {
+                              @Valid @RequestBody CreateOrUpdateComment dto) {
         log.info("Добавление комментария к объявлению ID={}", id);
         // Заглушка: создаем фиктивный комментарий
         Comment comment = new Comment();
@@ -142,7 +143,7 @@ public class CommentController {
     @ResponseStatus(HttpStatus.OK)
     public Comment updateComment(@PathVariable("adId") Integer adId,
                                  @PathVariable("commentId") Integer commentId,
-                                 @RequestBody CreateOrUpdateComment dto) {
+                                 @Valid @RequestBody CreateOrUpdateComment dto) {
         log.info("Обновление комментария ID={} в объявлении ID={}", commentId, adId);
         // Заглушка: создаем "обновленный" комментарий
         Comment comment = new Comment();

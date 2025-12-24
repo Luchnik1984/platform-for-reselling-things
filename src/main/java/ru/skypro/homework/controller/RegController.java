@@ -13,6 +13,8 @@ import org.springframework.web.server.ResponseStatusException;
 import ru.skypro.homework.dto.reg.Register;
 import ru.skypro.homework.service.RegService;
 
+import javax.validation.Valid;
+
 @Slf4j
 @CrossOrigin(value = "http://localhost:3000")
 @RestController
@@ -32,9 +34,10 @@ public class RegController {
     })
     @PostMapping("/register")
     @ResponseStatus(HttpStatus.CREATED)
-    public void register(@RequestBody Register register) {
+    public void register(@Valid @RequestBody Register register) {
         if (!regService.register(register)) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST);
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                    "Пользователь с таким email уже существует");
         }
     }
 }
