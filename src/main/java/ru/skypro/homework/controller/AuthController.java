@@ -12,6 +12,8 @@ import org.springframework.web.server.ResponseStatusException;
 import ru.skypro.homework.dto.auth.Login;
 import ru.skypro.homework.service.AuthService;
 
+import javax.validation.Valid;
+
 /**
  * Контроллер для авторизации пользователей.
  */
@@ -38,7 +40,7 @@ public class AuthController {
     })
     @PostMapping("/login")
     @ResponseStatus(HttpStatus.OK)
-    public void login(@RequestBody Login login) {
+    public void login(@Valid @RequestBody Login login) {
         log.info("Авторизация пользователя: {}", login.getUsername());
         if (authService.login(login.getUsername(), login.getPassword())) {
             log.debug("Авторизация успешна");

@@ -9,7 +9,7 @@ Content-Type: application/json
 "password": "test12345",
 "firstName": " Test",
 "lastName": " User",
-"phone": " ++79991112233",
+"phone": " +7 (999) 111-22-33",
 "role": "USER"
 }
 
@@ -108,7 +108,7 @@ Authorization: Basic test@example1.com test12345
 {
   "firstName": "Ivan",
   "lastName": "Ivanov",
-  "phone": "+79001234567"
+  "phone": "+7 (900)123-45-67"
 }
 
 ### 3.3 Смена пароля

@@ -18,6 +18,7 @@ import ru.skypro.homework.dto.ads.Ads;
 import ru.skypro.homework.dto.ads.CreateOrUpdateAd;
 import ru.skypro.homework.dto.ads.ExtendedAd;
 
+import javax.validation.Valid;
 import java.util.List;
 import java.util.Random;
 
@@ -206,8 +207,9 @@ public class AdController {
             )
     })
     @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    public ResponseEntity<Ad> addAd(@RequestPart("properties") CreateOrUpdateAd properties,
-                                    @RequestPart("image") MultipartFile image) {
+    public ResponseEntity<Ad> addAd(
+            @Valid @RequestPart("properties") CreateOrUpdateAd properties,
+            @RequestPart("image") MultipartFile image) {
         log.info("Был вызван метод контроллера addAd для создания объявления. " +
                 "Заголовок: {}, размер файла: {} байт", properties.getTitle(), image.getSize());
 
@@ -268,7 +270,7 @@ public class AdController {
     })
     @PatchMapping("/{id}")
     public Ad updateAd(@PathVariable("id") Integer id,
-                       @RequestBody CreateOrUpdateAd updateData) {
+                       @Valid @RequestBody CreateOrUpdateAd updateData) {
         log.info("Был вызван метод updateAd для обновления объявления с ID={}. Новые данные: {}", id, updateData);
 
         // Заглушка создаёт объект Ad, имитируя успешно обновлённое объявление.
