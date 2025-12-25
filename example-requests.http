@@ -9,7 +9,7 @@ Content-Type: application/json
 "password": "test12345",
 "firstName": " Test",
 "lastName": " User",
-"phone": " ++79991112233",
+"phone": " +79991112233",
 "role": "USER"
 }
 
