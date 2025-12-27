@@ -129,26 +129,78 @@
 
 ## Команды:
 
+- Создайте файл настроек окружения.
+Файл содержит настройки подключения к БД и приложения.
+Отредактируйте его
+```bash
+cp .env.example .env.local
+```
+
 ### Компиляция проекта
 ```bash
   ./mvnw clean compile 
 ```
 
 ### Запуск приложения
+- Приложение запустится с H2 базой данных в памяти
 ```bash
   ./mvnw spring-boot:run
 ```
-### Сборка пакета
+
+## Разработка с PostgreSQL:
+- Вариант A: PostgreSQL в Docker (рекомендуется)
+```bash
+     docker-compose -f docker-compose.db.yml up -d
+./mvnw spring-boot:run -Dspring.profiles.active=dev
+```
+- Вариант B: Локальная PostgreSQL
+- Убедитесь что PostgreSQL установлен и база 'ads_platform' создана
+```bash
+  ./mvnw spring-boot:run -Dspring.profiles.active=dev
+```
+## Тестирование:
+
+### Unit-тесты (H2)
+```bash
+  ./mvnw test -Dspring.profiles.active=test
+```
+### Интеграционные тесты (Testcontainers + PostgreSQL
+```bash
+  ./mvnw test -Dspring.profiles.active=docker-test
+```
+###  Все тесты
+```bash
+  ./mvnw test 
+```
+
+## Сборка пакета:
 ```bash
   ./mvnw package 
 ```
 
-### Запуск фронтэнда
+## Запуск фронтэнда:
 ### Для Windows (PowerShell)
   Запустите Docker Desktop, затем выполните в терминале:
 ```bash
      docker run -p 3000:3000 --rm ghcr.io/dmitry-bizin/front-react-avito:v1.21
 ```
+
+## Docker Compose для PostgreSQL:
+
+### Запуск PostgreSQL
+```bash
+     docker-compose -f docker-compose.db.yml up -d
+```
+### Остановка PostgreSQL
+```bash
+     docker-compose -f docker-compose.db.yml down
+```
+### Остановка с удалением данных PostgreSQL
+```bash
+     docker-compose -f docker-compose.db.yml down -v
+```
+
+## Полный запуск приложения с PostgreSQL и фронтендом
 
 ##  Ссылки
 - OpenAPI спецификация: в файле openapi.yaml

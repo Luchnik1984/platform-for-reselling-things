@@ -11,7 +11,7 @@ services:
   # ============================================
   postgres:
     image: postgres:15-alpine
-    container_name: ads-platform-postgres
+    container_name: ads-postgres
     restart: unless-stopped
     environment:
       # Используем значения из .env.local или значения по умолчанию
@@ -32,25 +32,6 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
-    networks:
-      - ads-network
-
-  # ============================================
-  # PGADMIN (WEB-ИНТЕРФЕЙС ДЛЯ УПРАВЛЕНИЯ БД)
-  # Опционально, можно отключить если не нужен
-  # ============================================
-  pgadmin:
-    image: dpage/pgadmin4
-    container_name: ads-platform-pgadmin
-    restart: unless-stopped
-    environment:
-      PGADMIN_DEFAULT_EMAIL: admin@ads-platform.com
-      PGADMIN_DEFAULT_PASSWORD: admin123
-    ports:
-      - "5050:80"
-    depends_on:
-      postgres:
-        condition: service_healthy
     networks:
       - ads-network
 
