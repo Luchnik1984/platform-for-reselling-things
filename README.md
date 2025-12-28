@@ -200,8 +200,28 @@ cp .env.example .env.local
      docker-compose -f docker-compose.db.yml down -v
 ```
 
-## Полный запуск приложения с PostgreSQL и фронтендом
-
+## Последовательный запуск приложения с PostgreSQL и фронтендом
+- Создайте и отредактируйте файл .env.local
+```bash
+cp .env.example .env.local
+```
+- Запустите PostgreSQL в Docker
+```bash
+     docker-compose -f docker-compose.db.yml up -d
+```
+- Проверьте что контейнер запущен
+```bash
+     docker ps | grep postgres
+```
+- Запустите приложение с профилем 'dev' для работы с PostgreSQL
+```bash
+     ./mvnw spring-boot:run -Dspring.profiles.active=dev
+```
+- Запустите Docker Desktop, 
+затем выполните в НОВОМ терминале (бэкенд оставьте работать в первом):
+```bash
+     docker run -p 3000:3000 --rm ghcr.io/dmitry-bizin/front-react-avito:v1.21
+```
 ##  Ссылки
 - OpenAPI спецификация: в файле openapi.yaml
 - Фронтенд: http://localhost:3000
