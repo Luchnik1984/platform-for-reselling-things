@@ -5,6 +5,8 @@ import ru.skypro.homework.dto.comments.Comment;
 import ru.skypro.homework.dto.comments.CreateOrUpdateComment;
 import ru.skypro.homework.entity.CommentEntity;
 
+import java.time.LocalDateTime;
+
 /**
  * Маппер для преобразования между сущностью комментария и DTO.
  *
@@ -32,6 +34,14 @@ public interface CommentMapper {
     @Mapping(target = "author", ignore = true)
     @Mapping(target = "ad", ignore = true)
     CommentEntity toEntity(CreateOrUpdateComment dto);
+
+    @AfterMapping
+    default void setCreatedAtIfNull(@MappingTarget CommentEntity commentEntity) {
+        if (commentEntity.getCreatedAt() == null) {
+            commentEntity.setCreatedAt(LocalDateTime.now());
+        }
+    }
+
 
     /**
      * Преобразует сущность комментария в DTO.
