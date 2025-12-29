@@ -133,7 +133,7 @@
 Файл содержит настройки подключения к БД и приложения.
 Отредактируйте его
 ```bash
-cp .env.example .env.local
+  cp .env.example .env
 ```
 
 ### Компиляция проекта
@@ -142,31 +142,49 @@ cp .env.example .env.local
 ```
 
 ### Запуск приложения
-- Приложение запустится с H2 базой данных в памяти
+- Приложение запустится с H2 базой данных в памяти (default профиль)
 ```bash
   ./mvnw spring-boot:run
 ```
-
+или 
+```bash
+  ./mvnw spring-boot:run
+# Запускаем приложение
+  $env:SPRING_PROFILES_ACTIVE=""
+  # Устанавливаем профиль
+  #
+```
 ## Разработка с PostgreSQL:
 - Вариант A: PostgreSQL в Docker (рекомендуется)
 ```bash
      docker-compose -f docker-compose.db.yml up -d
-./mvnw spring-boot:run -Dspring.profiles.active=dev
 ```
 - Вариант B: Локальная PostgreSQL
-- Убедитесь что PostgreSQL установлен и база 'ads_platform' создана
+- Убедитесь что PostgreSQL установлен и база создана
 ```bash
-  ./mvnw spring-boot:run -Dspring.profiles.active=dev
+./mvnw spring-boot:run
+# Запускаем приложение
+  $env:SPRING_PROFILES_ACTIVE="dev"
+# Устанавливаем профиль
+#
 ```
 ## Тестирование:
 
 ### Unit-тесты (H2)
 ```bash
-  ./mvnw test -Dspring.profiles.active=test
+  ./mvnw test
+  # Запускаем интеграционные тесты
+  $env:SPRING_PROFILES_ACTIVE="test"
+# Устанавливаем профиль
+#
 ```
 ### Интеграционные тесты (Testcontainers + PostgreSQL
 ```bash
-  ./mvnw test -Dspring.profiles.active=docker-test
+  ./mvnw test
+  # Запускаем интеграционные тесты
+  $env:SPRING_PROFILES_ACTIVE="docker-test"
+# Устанавливаем профиль
+#
 ```
 ###  Все тесты
 ```bash
@@ -199,11 +217,15 @@ cp .env.example .env.local
 ```bash
      docker-compose -f docker-compose.db.yml down -v
 ```
+### Удаление контейнера, созданного docker-compose.db.yml
+```bash
+     docker-compose -f docker-compose.db.yml down --rmi all
+```
 
 ## Последовательный запуск приложения с PostgreSQL и фронтендом
-- Создайте и отредактируйте файл .env.local
+- Создайте и отредактируйте файл .env
 ```bash
-cp .env.example .env.local
+    cp .env.example .env
 ```
 - Запустите PostgreSQL в Docker
 ```bash
@@ -211,11 +233,15 @@ cp .env.example .env.local
 ```
 - Проверьте что контейнер запущен
 ```bash
-     docker ps | grep postgres
+     docker ps | Select-String "postgres"
 ```
 - Запустите приложение с профилем 'dev' для работы с PostgreSQL
 ```bash
-     ./mvnw spring-boot:run -Dspring.profiles.active=dev
+  ./mvnw spring-boot:run
+  # Запускаем приложение
+  $env:SPRING_PROFILES_ACTIVE="dev"
+  # Устанавливаем профиль
+#
 ```
 - Запустите Docker Desktop, 
 затем выполните в НОВОМ терминале (бэкенд оставьте работать в первом):
