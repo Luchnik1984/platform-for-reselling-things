@@ -1,9 +1,9 @@
 package ru.skypro.homework.mapper;
 
-import org.mapstruct.*;
 import ru.skypro.homework.dto.comments.Comment;
 import ru.skypro.homework.dto.comments.CreateOrUpdateComment;
 import ru.skypro.homework.entity.CommentEntity;
+
 
 /**
  * Маппер для преобразования между сущностью комментария и DTO.
@@ -18,7 +18,7 @@ import ru.skypro.homework.entity.CommentEntity;
  * @see CreateOrUpdateComment
  * @see Comment
  */
-@Mapper(config = MapStructConfig.class)
+
 public interface CommentMapper {
 
     /**
@@ -27,10 +27,7 @@ public interface CommentMapper {
      * @param dto DTO с текстом комментария
      * @return сущность комментария
      */
-    @Mapping(target = "id", ignore = true)
-    @Mapping(target = "createdAt", ignore = true)
-    @Mapping(target = "author", ignore = true)
-    @Mapping(target = "ad", ignore = true)
+
     CommentEntity toEntity(CreateOrUpdateComment dto);
 
     /**
@@ -45,16 +42,8 @@ public interface CommentMapper {
      * @param commentEntity сущность комментария
      * @return DTO комментария
      */
-    @Mapping(target = "pk", source = "id")
-    @Mapping(target = "author", source = "author.id")
-    @Mapping(target = "authorFirstName", source = "author.firstName")
-    @Mapping(target = "authorImage",
-            expression = "java(commentEntity.getAuthor() != null && " +
-                    "commentEntity.getAuthor().getImage() != null ? " +
-                    "commentEntity.getAuthor().getImage().getImageUrl() : null)")
-    @Mapping(target = "createdAt",
-            expression = "java(commentEntity.getCreatedAt() != null ? " +
-                    "commentEntity.getCreatedAt().toInstant(java.time.ZoneOffset.UTC).toEpochMilli() : null)")
+
+    // @Mapping(target = "text", source = "text")
     Comment toDto(CommentEntity commentEntity);
 
     /**
@@ -63,10 +52,7 @@ public interface CommentMapper {
      * @param dto DTO с обновлённым текстом
      * @param commentEntity сущность для обновления
      */
-    @BeanMapping(nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
-    @Mapping(target = "id", ignore = true)
-    @Mapping(target = "createdAt", ignore = true)
-    @Mapping(target = "author", ignore = true)
-    @Mapping(target = "ad", ignore = true)
-    void updateEntityFromDto(CreateOrUpdateComment dto, @MappingTarget CommentEntity commentEntity);
+
+    void updateEntityFromDto(CreateOrUpdateComment dto, CommentEntity commentEntity);
+
 }

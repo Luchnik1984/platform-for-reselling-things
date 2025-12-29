@@ -1,6 +1,5 @@
 package ru.skypro.homework.mapper;
 
-import org.mapstruct.*;
 import ru.skypro.homework.dto.reg.Register;
 import ru.skypro.homework.dto.user.User;
 import ru.skypro.homework.entity.UserEntity;
@@ -19,7 +18,6 @@ import ru.skypro.homework.entity.UserEntity;
  * @see Register
  * @see User
  */
-@Mapper(config = MapStructConfig.class)
 public interface UserMapper {
 
     /**
@@ -35,12 +33,7 @@ public interface UserMapper {
      * @param register DTO регистрации
      * @return сущность пользователя
      */
-    @Mapping(target = "email", source = "username")
-    @Mapping(target = "id", ignore = true)
-    @Mapping(target = "image", ignore = true)
-    @Mapping(target = "ads", ignore = true)
-    @Mapping(target = "comments", ignore = true)
-    @Mapping(target = "enabled", constant = "true")
+
     UserEntity toEntity(Register register);
 
     /**
@@ -56,9 +49,7 @@ public interface UserMapper {
      * @param userEntity сущность пользователя
      * @return DTO пользователя
      */
-    @Mapping(target = "image",
-            expression = "java(userEntity.getImage() != null ? " +
-                    "userEntity.getImage().getImageUrl() : null)")
+
     User toDto(UserEntity userEntity);
 
     /**
@@ -75,14 +66,7 @@ public interface UserMapper {
      * @param updateDto DTO с обновлениями
      * @param userEntity сущность для обновления
      */
-    @BeanMapping(nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
-    @Mapping(target = "id", ignore = true)
-    @Mapping(target = "email", ignore = true)
-    @Mapping(target = "password", ignore = true)
-    @Mapping(target = "image", ignore = true)
-    @Mapping(target = "ads", ignore = true)
-    @Mapping(target = "comments", ignore = true)
-    @Mapping(target = "enabled", ignore = true)
-    void updateEntityFromRegister(Register updateDto, @MappingTarget UserEntity userEntity);
+
+    void updateEntityFromRegister(Register updateDto, UserEntity userEntity);
 
 }

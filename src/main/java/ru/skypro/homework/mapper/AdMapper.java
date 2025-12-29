@@ -1,6 +1,5 @@
 package ru.skypro.homework.mapper;
 
-import org.mapstruct.*;
 import ru.skypro.homework.dto.ads.Ad;
 import ru.skypro.homework.dto.ads.CreateOrUpdateAd;
 import ru.skypro.homework.dto.ads.ExtendedAd;
@@ -21,7 +20,7 @@ import ru.skypro.homework.entity.AdEntity;
  * @see Ad
  * @see ExtendedAd
  */
-@Mapper(config = MapStructConfig.class, uses = {UserMapper.class})
+
 public interface AdMapper {
 
     /**
@@ -30,11 +29,7 @@ public interface AdMapper {
      * @param dto DTO с данными объявления
      * @return сущность объявления
      */
-    @Mapping(target = "id", ignore = true)
-    @Mapping(target = "createdAt", ignore = true)
-    @Mapping(target = "author", ignore = true)
-    @Mapping(target = "image", ignore = true)
-    @Mapping(target = "comments", ignore = true)
+
     AdEntity toEntity(CreateOrUpdateAd dto);
 
     /**
@@ -51,11 +46,7 @@ public interface AdMapper {
      * @param adEntity сущность объявления
      * @return краткое DTO объявления
      */
-    @Mapping(target = "pk", source = "id")
-    @Mapping(target = "author", source = "author.id")
-    @Mapping(target = "image",
-            expression = "java(adEntity.getImage() != null ? " +
-                    "adEntity.getImage().getImageUrl() : null)")
+
     Ad toDto(AdEntity adEntity);
 
     /**
@@ -72,14 +63,7 @@ public interface AdMapper {
      * @param adEntity сущность объявления
      * @return полное DTO объявления
      */
-    @Mapping(target = "pk", source = "id")
-    @Mapping(target = "authorFirstName", source = "author.firstName")
-    @Mapping(target = "authorLastName", source = "author.lastName")
-    @Mapping(target = "email", source = "author.email")
-    @Mapping(target = "phone", source = "author.phone")
-    @Mapping(target = "image",
-            expression = "java(adEntity.getImage() != null ? " +
-                    "adEntity.getImage().getImageUrl() : null)")
+
     ExtendedAd toExtendedDto(AdEntity adEntity);
 
     /**
@@ -89,11 +73,7 @@ public interface AdMapper {
      * @param dto DTO с обновлениями
      * @param adEntity сущность для обновления
      */
-    @BeanMapping(nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
-    @Mapping(target = "id", ignore = true)
-    @Mapping(target = "createdAt", ignore = true)
-    @Mapping(target = "author", ignore = true)
-    @Mapping(target = "image", ignore = true)
-    @Mapping(target = "comments", ignore = true)
-    void updateEntityFromDto(CreateOrUpdateAd dto, @MappingTarget AdEntity adEntity);
+
+    void updateEntityFromDto(CreateOrUpdateAd dto, AdEntity adEntity);
+
 }
