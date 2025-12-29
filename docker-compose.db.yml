@@ -1,0 +1,62 @@
+# ============================================
+# DOCKER COMPOSE ДЛЯ РАЗРАБОТКИ
+# используется для запуска PostgreSQL и pgAdmin
+# ============================================
+
+version: '3.8'
+
+services:
+  # ============================================
+  # POSTGRESQL ДЛЯ РАЗРАБОТКИ
+  # ============================================
+  postgres:
+    image: postgres:15-alpine
+    container_name: ads-postgres
+    restart: unless-stopped
+    environment:
+      # Используем значения из .env.local или значения по умолчанию
+      POSTGRES_DB: ${DB_NAME:-ads_platform}
+      POSTGRES_USER: ${DB_USERNAME:-postgres}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-postgres}
+      POSTGRES_INITDB_ARGS: "--encoding=UTF-8 --locale=C"
+    ports:
+      # Настроить порт в .env.local если 5432 занят
+      - "${DB_PORT:-5432}:5432"
+    volumes:
+      # Постоянное хранилище данных
+      - postgres_data:/var/lib/postgresql/data
+      # Автоматическое выполнение миграций при старте
+      - ./src/main/resources/db/migration:/docker-entrypoint-initdb.d
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USERNAME:-postgres}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - ads-network
+
+  # ============================================
+  # FRONTEND (уже используется командой)
+  # Оставляем для полноты картины
+  # ============================================
+  frontend:
+    image: ghcr.io/dmitry-bizin/front-react-avito:v1.21
+    container_name: ads-platform-frontend
+    ports:
+      - "3000:3000"
+    networks:
+      - ads-network
+
+# ============================================
+# VOLUMES (постоянное хранилище)
+# ============================================
+volumes:
+  postgres_data:
+    driver: local
+
+# ============================================
+# NETWORKS (внутренняя сеть контейнеров)
+# ============================================
+networks:
+  ads-network:
+    driver: bridge
