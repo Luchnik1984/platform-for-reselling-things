@@ -13,6 +13,8 @@ import org.springframework.web.bind.annotation.*;
 import ru.skypro.homework.dto.comments.Comment;
 import ru.skypro.homework.dto.comments.Comments;
 import ru.skypro.homework.dto.comments.CreateOrUpdateComment;
+import ru.skypro.homework.repository.UserRepository;
+import ru.skypro.homework.service.CommentService;
 
 import javax.validation.Valid;
 import java.util.List;
@@ -34,6 +36,10 @@ import java.util.List;
 @RequestMapping("/ads")
 
 public class CommentController {
+
+    private final CommentService commentService;
+    private final UserRepository userRepository;
+
 
     /**
      * Получение списка комментариев для указанного объявления.
