@@ -40,6 +40,12 @@ public class ImageEntity {
     /**
      * Путь к файлу изображения в файловой системе
      * Пример: "/uploads/images/avatars/user-5-avatar.jpg"
+     * <p>Особенности:
+     * <ul>
+     *   <li>Путь должен быть уникальным для каждого файла</li>
+     *   <li>Не должен начинаться с "/" (корректируется в getImageUrl())</li>
+     *   <li>Файлы хранятся локально, в продакшене можно перенести в облако</li>
+     * </ul>
      */
     @Column(name = "file_path", nullable = false, unique = true)
     @NotBlank(message = "Путь к файлу не может быть пустым")
@@ -61,80 +67,77 @@ public class ImageEntity {
     @NotBlank(message = "MIME-тип не может быть пустым")
     private String mediaType;
 
-    /**
-     * Пользователь, которому принадлежит это изображение (аватар)
-     * Может быть null если изображение относится к объявлению
-     */
-    @OneToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "user_id")
-    private UserEntity user;
 
     /**
-     * Объявление, которому принадлежит это изображение
-     * Может быть null если изображение является аватаром пользователя
-     */
-    @OneToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "ad_id")
-    private AdEntity ad;
-
-    /**
-     * Создает изображение для пользователя (аватар)
+     * Возвращает URL для доступа к изображению через API.
      *
-     * @param filePath  путь к файлу
-     * @param fileSize  размер файла
-     * @param mediaType MIME-тип
-     * @param user      пользователь
-     */
-    public ImageEntity(String filePath, Long fileSize, String mediaType, UserEntity user) {
-        this.filePath = filePath;
-        this.fileSize = fileSize;
-        this.mediaType = mediaType;
-        this.user = user;
-        this.ad = null;
-    }
-
-    /**
-     * Создает изображение для объявления
+     * <p>Логика работы:
+     * <ol>
+     *   <li>Если filePath начинается с "/" - убираем его</li>
+     *   <li>Добавляем префикс "/images/" для доступа через ImageController</li>
+     *   <li>Пример: "uploads/ads/123.jpg" → "/images/uploads/ads/123.jpg"</li>
+     * </ol>
      *
-     * @param filePath  путь к файлу
-     * @param fileSize  размер файла
-     * @param mediaType MIME-тип
-     * @param ad        объявление
-     */
-    public ImageEntity(String filePath, Long fileSize, String mediaType, AdEntity ad) {
-        this.filePath = filePath;
-        this.fileSize = fileSize;
-        this.mediaType = mediaType;
-        this.user = null;
-        this.ad = ad;
-    }
-
-    /**
-     * Возвращает URL для доступа к изображению через API
+     * <p>Соответствие OpenAPI:
+     * - В DTO User: поле {@code image} должно содержать URL типа String
+     * - В DTO Ad: поле {@code image} должно содержать URL типа String
+     * - В DTO Comment: поле {@code authorImage} должно содержать URL типа String
      *
-     * @return URL изображения
+     * @return полный URL для доступа к изображению через веб-интерфейс
      */
     public String getImageUrl() {
-        // В продакшене здесь будет полный URL
-        // Пока возвращаем путь, который будет обслуживаться контроллером
-        return "/images" + filePath;
+        if (filePath == null || filePath.isEmpty()) {
+            return null;
+        }
+
+        // Нормализуем путь: убираем начальный слэш, если он есть
+        // Это важно, чтобы не было двойных слэшей: "/images//uploads/..."
+        String normalizedPath = filePath.startsWith("/")
+                ? filePath.substring(1)
+                : filePath;
+
+        // Префикс "/images/" будет обрабатываться ImageController
+        // Контроллер будет искать файл по normalizedPath в файловой системе
+        return "/images/" + normalizedPath;
     }
 
     /**
-     * Проверяет, является ли изображение аватаром пользователя
+     * Проверяет, является ли изображение аватаром пользователя.
+     * В текущей реализации ImageEntity не хранит прямую ссылку на пользователя,
+     * поэтому всегда возвращает false. Определение типа изображения
+     * выполняется на уровне сервиса через проверку связей.
      *
-     * @return true если изображение связано с пользователем
+     * @return false (в этой реализации)
+     * @deprecated Используйте проверку через UserRepository или AdRepository
      */
+    @Deprecated
     public boolean isUserAvatar() {
-        return user != null;
+        return false;
     }
 
     /**
-     * Проверяет, является ли изображение картинкой объявления
+     * Проверяет, является ли изображение картинкой объявления.
+     * Аналогично isUserAvatar(), определение типа выполняется через сервис.
      *
-     * @return true если изображение связано с объявлением
+     * @return false (в этой реализации)
+     * @deprecated Используйте проверку через UserRepository или AdRepository
      */
+    @Deprecated
     public boolean isAdImage() {
-        return ad != null;
+        return false;
+    }
+
+    /**
+     * Создает изображение с указанными метаданными.
+     * Конструктор для ручного создания (например, в тестах).
+     *
+     * @param filePath  путь к файлу (не начинать с "/")
+     * @param fileSize  размер файла в байтах
+     * @param mediaType MIME-тип файла
+     */
+    public ImageEntity(String filePath, Long fileSize, String mediaType) {
+        this.filePath = filePath;
+        this.fileSize = fileSize;
+        this.mediaType = mediaType;
     }
 }

@@ -82,14 +82,4 @@ public class CommentEntity {
         this.createdAt = LocalDateTime.now();
     }
 
-    /**
-     * Проверяет, принадлежит ли комментарий указанному пользователю
-     *
-     * @param userId идентификатор пользователя
-     * @return true если пользователь является автором комментария
-     */
-    public boolean isAuthor(Integer userId) {
-        return author != null && author.getId().equals(userId);
-    }
-
 }

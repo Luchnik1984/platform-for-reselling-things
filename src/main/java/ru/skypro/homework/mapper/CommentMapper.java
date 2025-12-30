@@ -48,19 +48,18 @@ public interface CommentMapper {
     @Mapping(target = "pk", source = "id")
     @Mapping(target = "author", source = "author.id")
     @Mapping(target = "authorFirstName", source = "author.firstName")
-    @Mapping(target = "authorImage",
-            expression = "java(commentEntity.getAuthor() != null && " +
-                    "commentEntity.getAuthor().getImage() != null ? " +
-                    "commentEntity.getAuthor().getImage().getImageUrl() : null)")
-    @Mapping(target = "createdAt",
-            expression = "java(commentEntity.getCreatedAt() != null ? " +
-                    "commentEntity.getCreatedAt().toInstant(java.time.ZoneOffset.UTC).toEpochMilli() : null)")
+    @Mapping(target = "authorImage", expression = "java(commentEntity.getAuthor() != null && " +
+            "commentEntity.getAuthor().getImage() != null ? " +
+            "commentEntity.getAuthor().getImage().getImageUrl() : null)")
+    @Mapping(target = "createdAt", expression = "java(commentEntity.getCreatedAt() != null ? " +
+            "commentEntity.getCreatedAt().toInstant(java.time.ZoneOffset.UTC).toEpochMilli() : null)")
+    @Mapping(target = "text", source = "text")
     Comment toDto(CommentEntity commentEntity);
 
     /**
      * Обновляет сущность комментария из DTO.
      *
-     * @param dto DTO с обновлённым текстом
+     * @param dto           DTO с обновлённым текстом
      * @param commentEntity сущность для обновления
      */
     @BeanMapping(nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
@@ -69,4 +68,6 @@ public interface CommentMapper {
     @Mapping(target = "author", ignore = true)
     @Mapping(target = "ad", ignore = true)
     void updateEntityFromDto(CreateOrUpdateComment dto, @MappingTarget CommentEntity commentEntity);
+
+
 }

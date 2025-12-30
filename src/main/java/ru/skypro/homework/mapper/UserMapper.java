@@ -2,8 +2,10 @@ package ru.skypro.homework.mapper;
 
 import org.mapstruct.*;
 import ru.skypro.homework.dto.reg.Register;
+import ru.skypro.homework.dto.user.UpdateUser;
 import ru.skypro.homework.dto.user.User;
 import ru.skypro.homework.entity.UserEntity;
+import ru.skypro.homework.enums.Role;
 
 /**
  * Маппер для преобразования между сущностью User и DTO.
@@ -36,7 +38,12 @@ public interface UserMapper {
      * @return сущность пользователя
      */
     @Mapping(target = "email", source = "username")
+    @Mapping(target = "firstName", source = "firstName")
+    @Mapping(target = "lastName", source = "lastName")
+    @Mapping(target = "phone", source = "phone")
+    @Mapping(target = "role", source = "role", defaultValue = "USER")
     @Mapping(target = "id", ignore = true)
+    @Mapping(target = "password", ignore = true)
     @Mapping(target = "image", ignore = true)
     @Mapping(target = "ads", ignore = true)
     @Mapping(target = "comments", ignore = true)
@@ -56,10 +63,29 @@ public interface UserMapper {
      * @param userEntity сущность пользователя
      * @return DTO пользователя
      */
-    @Mapping(target = "image",
-            expression = "java(userEntity.getImage() != null ? " +
-                    "userEntity.getImage().getImageUrl() : null)")
+    @Mapping(target = "image", expression = "java(userEntity.getImage()" +
+            " != null ? userEntity.getImage().getImageUrl() : null)")
     User toDto(UserEntity userEntity);
+
+    /**
+     * Обновляет сущность пользователя из DTO UpdateUser.
+     * Используется для обновления профиля (PATCH /users/me).
+     * Роль не обновляется через этот метод.
+     *
+     * @param updateUser DTO с обновленными данными
+     * @param userEntity сущность для обновления
+     */
+    @BeanMapping(nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
+    @Mapping(target = "id", ignore = true)
+    @Mapping(target = "email", ignore = true)
+    @Mapping(target = "password", ignore = true)
+    @Mapping(target = "image", ignore = true)
+    @Mapping(target = "ads", ignore = true)
+    @Mapping(target = "comments", ignore = true)
+    @Mapping(target = "enabled", ignore = true)
+    @Mapping(target = "role", ignore = true)
+    // Роль не меняется при обновлении профиля
+    void updateEntityFromUpdateUser(UpdateUser updateUser, @MappingTarget UserEntity userEntity);
 
     /**
      * Обновляет сущность пользователя из DTO регистрации.
@@ -72,7 +98,7 @@ public interface UserMapper {
      *   <li>Не обновляет email (логин) - он неизменяем</li>
      * </ul>
      *
-     * @param updateDto DTO с обновлениями
+     * @param updateDto  DTO с обновлениями
      * @param userEntity сущность для обновления
      */
     @BeanMapping(nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
@@ -84,5 +110,17 @@ public interface UserMapper {
     @Mapping(target = "comments", ignore = true)
     @Mapping(target = "enabled", ignore = true)
     void updateEntityFromRegister(Register updateDto, @MappingTarget UserEntity userEntity);
+
+
+    /**
+     * Гарантирует, что роль не будет null.
+     * Дополнительная защита, если defaultValue не сработает.
+     */
+    @AfterMapping
+    default void ensureRoleNotNull(@MappingTarget UserEntity userEntity) {
+        if (userEntity.getRole() == null) {
+            userEntity.setRole(Role.USER);
+        }
+    }
 
 }
