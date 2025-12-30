@@ -21,7 +21,7 @@ import ru.skypro.homework.entity.AdEntity;
  * @see Ad
  * @see ExtendedAd
  */
-@Mapper(config = MapStructConfig.class, uses = {UserMapper.class})
+@Mapper(config = MapStructConfig.class)
 public interface AdMapper {
 
     /**
@@ -53,9 +53,8 @@ public interface AdMapper {
      */
     @Mapping(target = "pk", source = "id")
     @Mapping(target = "author", source = "author.id")
-    @Mapping(target = "image",
-            expression = "java(adEntity.getImage() != null ? " +
-                    "adEntity.getImage().getImageUrl() : null)")
+    @Mapping(target = "image", expression = "java(adEntity.getImage()" +
+            " != null ? adEntity.getImage().getImageUrl() : null)")
     Ad toDto(AdEntity adEntity);
 
     /**
@@ -77,16 +76,15 @@ public interface AdMapper {
     @Mapping(target = "authorLastName", source = "author.lastName")
     @Mapping(target = "email", source = "author.email")
     @Mapping(target = "phone", source = "author.phone")
-    @Mapping(target = "image",
-            expression = "java(adEntity.getImage() != null ? " +
-                    "adEntity.getImage().getImageUrl() : null)")
+    @Mapping(target = "image", expression = "java(adEntity.getImage()" +
+            " != null ? adEntity.getImage().getImageUrl() : null)")
     ExtendedAd toExtendedDto(AdEntity adEntity);
 
     /**
      * Обновляет сущность объявления (Ad) из DTO.
      * Используется для частичного обновления объявления.
      *
-     * @param dto DTO с обновлениями
+     * @param dto      DTO с обновлениями
      * @param adEntity сущность для обновления
      */
     @BeanMapping(nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
@@ -96,4 +94,6 @@ public interface AdMapper {
     @Mapping(target = "image", ignore = true)
     @Mapping(target = "comments", ignore = true)
     void updateEntityFromDto(CreateOrUpdateAd dto, @MappingTarget AdEntity adEntity);
+
 }
+

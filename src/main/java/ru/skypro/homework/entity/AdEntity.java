@@ -83,12 +83,11 @@ public class AdEntity {
     /**
      * Изображение объявления
      */
-    @OneToOne(
-            mappedBy = "ad",
-            cascade = CascadeType.ALL,
+    @OneToOne(cascade = CascadeType.ALL,
             orphanRemoval = true,
             fetch = FetchType.LAZY
     )
+    @JoinColumn(name = "image_id")
     private ImageEntity image;
 
     /**
@@ -111,16 +110,6 @@ public class AdEntity {
         this.description = description;
         this.author = author;
         this.createdAt = LocalDateTime.now();
-    }
-
-    /**
-     * Проверяет, принадлежит ли объявление указанному пользователю
-     *
-     * @param userId идентификатор пользователя
-     * @return true если пользователь является автором
-     */
-    public boolean isAuthor(Integer userId) {
-        return author != null && author.getId().equals(userId);
     }
 
 }

@@ -63,7 +63,7 @@ public class UserEntity {
      * Ограничения на пароль проверяются на уровне DTO (@Size(min=8, max=16)).
      * Здесь хранится уже зашифрованная версия.
      */
-    @Column(nullable = false)
+    @Column(nullable = false, length = 60)
     @NotBlank(message = "Пароль не может быть пустым")
     private String password;
 
@@ -104,12 +104,10 @@ public class UserEntity {
     /**
      * Аватар пользователя
      */
-    @OneToOne(
-            mappedBy = "user",
-            cascade = CascadeType.ALL,
+    @OneToOne(cascade = CascadeType.ALL,
             orphanRemoval = true,
-            fetch = FetchType.LAZY
-    )
+            fetch = FetchType.LAZY)
+    @JoinColumn(name = "image_id")
     private ImageEntity image;
 
     /**
