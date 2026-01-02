@@ -14,13 +14,13 @@ services:
     container_name: ads-postgres
     restart: unless-stopped
     environment:
-      # Используем значения из .env.local или значения по умолчанию
+      # Используем значения из .env или значения по умолчанию
       POSTGRES_DB: ${DB_NAME:-ads_platform}
       POSTGRES_USER: ${DB_USERNAME:-postgres}
       POSTGRES_PASSWORD: ${DB_PASSWORD:-postgres}
       POSTGRES_INITDB_ARGS: "--encoding=UTF-8 --locale=C"
     ports:
-      # Настроить порт в .env.local если 5432 занят
+      # Настроить порт в .env если 5432 занят
       - "${DB_PORT:-5432}:5432"
     volumes:
       # Постоянное хранилище данных
