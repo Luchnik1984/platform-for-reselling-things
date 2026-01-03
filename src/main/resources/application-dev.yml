@@ -32,14 +32,27 @@ spring:
     show-sql: ${SHOW_SQL:true}
     properties:
       hibernate:
+        # Явно отключаем создание DDL
+        hbm2ddl.auto: validate
+        hbm2ddl.create_indexes: false
+        hbm2ddl.create_constraints: false
+        hbm2ddl.create_namespaces: false
+
+        # Форматирование SQL
         format_sql: true
         use_sql_comments: true
         dialect: org.hibernate.dialect.PostgreSQLDialect
-#        jdbc:
-#          batch_size: 20
-#        order_inserts: true
-#        order_updates: true
-#        batch_versioned_data: true
+
+        # Настройки для предотвращения конфликтов с Flyway
+        temp:
+          use_jdbc_metadata_defaults: false
+
+        # Отключаем автоматические схемы и пространства имен
+        default_schema: public
+        jdbc:
+          lob:
+            non_contextual_creation: true
+
 
   # ============================================
   # FLYWAY SETTINGS (database migrations)
@@ -48,7 +61,13 @@ spring:
     enabled: true
     locations: classpath:db/migration
     baseline-on-migrate: true
-#    validate-on-migrate: true
+    validate-on-migrate: true
+    # Не допускаем миграции без проверки
+    clean-on-validation-error: false
+    # Используем кодировку UTF-8 для миграций
+    encoding: UTF-8
+    # Разрешаем миграции out-of-order (для разработки)
+    out-of-order: false
 
   # ============================================
   # ADDITIONAL SETTINGS FOR DEVELOPMENT
@@ -57,8 +76,19 @@ spring:
     restart:
       enabled: true
 
+  # Настройки для загрузки файлов (для этапа 3)
+  servlet:
+    multipart:
+      max-file-size: 10MB
+      max-request-size: 10MB
+
 server:
   port: ${APP_PORT:8080}
+  servlet:
+    encoding:
+      charset: UTF-8
+      enabled: true
+      force: true
   error:
     include-stacktrace: always
     include-message: always
@@ -68,6 +98,9 @@ logging:
     ru.skypro.homework: ${LOG_LEVEL:DEBUG}
     org.hibernate.SQL: ${HIBERNATE_SQL_LOG_LEVEL:DEBUG}
     org.hibernate.type.descriptor.sql: TRACE
+    org.flywaydb.core: INFO
+    org.springframework.security: INFO
+    org.springframework.web: INFO
   pattern:
     console: '%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n'
   file:
@@ -77,7 +110,15 @@ logging:
       max-file-size: 10MB
       max-history: 30
 
-# Directory for uploads (for STAGE 3)
-# file:
+# # Directory for uploads (for STAGE 3)
+#file:
 #   upload:
-#     dir: ${UPLOAD_DIR:./uploads}
+#      dir: ${UPLOAD_DIR:./uploads}
+#      max-size: 10485760
+
+# ============================================
+# SPRING SECURITY SETTINGS (для разработки)
+# ============================================
+# Отключаем кэширование для разработки
+spring.security.filter:
+  dispatcher-types: ASYNC,FORWARD,INCLUDE,REQUEST
