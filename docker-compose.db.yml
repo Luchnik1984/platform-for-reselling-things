@@ -26,7 +26,7 @@ services:
       # Постоянное хранилище данных
       - postgres_data:/var/lib/postgresql/data
       # Автоматическое выполнение миграций при старте
-      - ./src/main/resources/db/migration:/docker-entrypoint-initdb.d
+#      - ./src/main/resources/db/migration:/docker-entrypoint-initdb.d
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U ${DB_USERNAME:-postgres}"]
       interval: 10s
