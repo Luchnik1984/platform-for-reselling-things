@@ -26,6 +26,7 @@ spring:
   # ============================================
   # JPA / HIBERNATE SETTINGS
   # ============================================
+
   jpa:
     hibernate:
       ddl-auto: validate

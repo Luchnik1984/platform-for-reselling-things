@@ -11,12 +11,13 @@
 INSERT INTO users (email, password, first_name, last_name, phone, role)
 VALUES
 -- Пароль: 'admin123'
-('admin@mail.ru', '$2a$12$hZFzf7tP56NGNj08U9gN1OdZ9hXwrrDAjIQDrLv.upeAxWaRnGmzS', 'Иван', 'Иванов', '+7 (999) 999-99-99', 'ADMIN'),
+('admin@mail.ru', '$2a$12$hZFzf7tP56NGNj08U9gN1OdZ9hXwrrDAjIQDrLv.upeAxWaRnGmzS', 'Иван', 'Иванов',
+ '+7 (999) 999-99-99', 'ADMIN'),
 
 -- Пароль: 'password123'
-('user@mail.ru', '$2a$12$NS9M2mAVQj2tsrh4GWS1xeXKMAJWGHjhbJ09OVMya1sSvIhHQr2Aa', 'Петр', 'Петров', '+7 (988) 888-88-88', 'USER');
+('user@mail.ru', '$2a$12$NS9M2mAVQj2tsrh4GWS1xeXKMAJWGHjhbJ09OVMya1sSvIhHQr2Aa', 'Петр', 'Петров', '+7 (988) 888-88-88',
+ 'USER');
 
 INSERT INTO ads (title, price, description, author_id)
-VALUES
-    ('Продам велосипед', 15000, 'Горный велосипед', 1),
-    ('Сниму квартиру', 75000, '2-комнатная в центре', 2);
+VALUES ('Продам велосипед', 15000, 'Горный велосипед', 1),
+       ('Сниму квартиру', 75000, '2-комнатная в центре', 2);
