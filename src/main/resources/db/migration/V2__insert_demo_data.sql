@@ -1,4 +1,4 @@
--- V2__insert_test_data.sql
+-- V2__insert_demo_data.sql
 -- Вставка тестовых данных с ЗАШИФРОВАННЫМИ паролями
 
 -- Пароли зашифрованы с помощью BCrypt (cost factor 10)
@@ -15,3 +15,8 @@ VALUES
 
 -- Пароль: 'password123'
 ('user@mail.ru', '$2a$12$NS9M2mAVQj2tsrh4GWS1xeXKMAJWGHjhbJ09OVMya1sSvIhHQr2Aa', 'Петр', 'Петров', '+7 (988) 888-88-88', 'USER');
+
+INSERT INTO ads (title, price, description, author_id)
+VALUES
+    ('Продам велосипед', 15000, 'Горный велосипед', 1),
+    ('Сниму квартиру', 75000, '2-комнатная в центре', 2);

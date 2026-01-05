@@ -1,5 +1,13 @@
 -- Создание таблиц
 
+-- Таблица изображений (images)
+CREATE TABLE images (
+                        id SERIAL PRIMARY KEY,
+                        file_path VARCHAR(255) NOT NULL UNIQUE,
+                        file_size BIGINT NOT NULL CHECK (file_size > 0),
+                        media_type VARCHAR(50) NOT NULL
+);
+
 -- Таблица пользователей (users)
 CREATE TABLE users (
                        id SERIAL PRIMARY KEY,
@@ -13,13 +21,6 @@ CREATE TABLE users (
                        image_id INT
 );
 
--- Таблица изображений (images)
-CREATE TABLE images (
-                        id SERIAL PRIMARY KEY,
-                        file_path VARCHAR(255) NOT NULL UNIQUE,
-                        file_size BIGINT NOT NULL CHECK (file_size > 0),
-                        media_type VARCHAR(50) NOT NULL
-);
 
 -- Таблица объявлений (ads)
 CREATE TABLE ads (
