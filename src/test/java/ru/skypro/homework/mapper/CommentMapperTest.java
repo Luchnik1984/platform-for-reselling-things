@@ -1,4 +1,4 @@
-package ru.skypro.homework.unit_tests;
+package ru.skypro.homework.mapper;
 
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -9,7 +9,6 @@ import ru.skypro.homework.entity.AdEntity;
 import ru.skypro.homework.entity.CommentEntity;
 import ru.skypro.homework.entity.ImageEntity;
 import ru.skypro.homework.entity.UserEntity;
-import ru.skypro.homework.mapper.CommentMapper;
 
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
