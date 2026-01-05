@@ -2,33 +2,33 @@
 ALTER TABLE ads
     ADD CONSTRAINT fk_ads_author
         FOREIGN KEY (author_id)
-            REFERENCES users(id)
+            REFERENCES users (id)
             ON DELETE CASCADE;
 
 ALTER TABLE ads
     ADD CONSTRAINT fk_ads_image
         FOREIGN KEY (image_id)
-            REFERENCES images(id)
+            REFERENCES images (id)
             ON DELETE SET NULL;
 
 -- Внешние ключи для таблицы comments
 ALTER TABLE comments
     ADD CONSTRAINT fk_comments_author
         FOREIGN KEY (author_id)
-            REFERENCES users(id)
+            REFERENCES users (id)
             ON DELETE CASCADE;
 
 ALTER TABLE comments
     ADD CONSTRAINT fk_comments_ad
         FOREIGN KEY (ad_id)
-            REFERENCES ads(id)
+            REFERENCES ads (id)
             ON DELETE CASCADE;
 
 -- Внешний ключ для аватаров пользователей
 ALTER TABLE users
     ADD CONSTRAINT fk_users_image
         FOREIGN KEY (image_id)
-            REFERENCES images(id)
+            REFERENCES images (id)
             ON DELETE SET NULL;
 
 -- Добавление индексов для улучшения производительности
