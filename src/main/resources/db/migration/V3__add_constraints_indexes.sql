@@ -36,4 +36,5 @@ CREATE INDEX IF NOT EXISTS idx_users_email ON users(email);
 CREATE INDEX IF NOT EXISTS idx_ads_author_id ON ads(author_id);
 CREATE INDEX IF NOT EXISTS idx_ads_created_at ON ads(created_at DESC);
 CREATE INDEX IF NOT EXISTS idx_comments_ad_id ON comments(ad_id);
+CREATE INDEX IF NOT EXISTS idx_comments_author_id ON comments(author_id);
 CREATE INDEX IF NOT EXISTS idx_comments_created_at ON comments(created_at DESC);
