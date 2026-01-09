@@ -2,7 +2,6 @@ package ru.skypro.homework.service.impl;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.http.HttpStatus;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -13,12 +12,10 @@ import ru.skypro.homework.dto.user.UpdateUser;
 import ru.skypro.homework.dto.user.User;
 import ru.skypro.homework.entity.UserEntity;
 import ru.skypro.homework.exceptions.InvalidPasswordException;
-import ru.skypro.homework.exceptions.UserNotFoundException;
 import ru.skypro.homework.mapper.UserMapper;
 import ru.skypro.homework.repository.UserRepository;
 import ru.skypro.homework.service.UserService;
-
-import java.util.NoSuchElementException;
+import ru.skypro.homework.util.SecurityUtils;
 
 /**
  * Реализация сервиса для работы с пользователями.
@@ -43,33 +40,6 @@ public class UserServiceImpl implements UserService {
     private final PasswordEncoder passwordEncoder;
 
     /**
-     * Получает сущность пользователя по данным аутентификации.
-     * <p>
-     * Поскольку пользователь уже успешно аутентифицирован Spring Security,
-     * предполагается, что он существует в базе данных. В случае нарушения
-     * этого условия выбрасывается {@link NoSuchElementException}, что указывает
-     * на критическое нарушение целостности данных системы.
-     *
-     * @param authentication объект аутентификации Spring Security
-     * @return сущность пользователя
-     * @throws NoSuchElementException если аутентифицированный пользователь
-     *                                не найден в базе данных (крайний случай)
-     */
-    private UserEntity getAuthenticatedUserEntity(Authentication authentication) {
-        String email = authentication.getName();
-        log.trace("Получение пользователя по email из аутентификации: {}", email);
-
-        return userRepository.findByEmail(email)
-                .orElseThrow(()-> {
-
-            log.warn("Несогласованность аутентификации:" +
-                    " пользователь {} не найден в БД после успешной аутентификации", email);
-            return new ResponseStatusException(HttpStatus.UNAUTHORIZED,
-                    "Несоответствие аутентификационных данных. " +
-                            "Пожалуйста, войдите в систему еще раз");});
-    }
-
-    /**
      * {@inheritDoc}
      * <p>
      * Получает информацию о текущем аутентифицированном пользователе.
@@ -87,7 +57,7 @@ public class UserServiceImpl implements UserService {
         String email = authentication.getName();
         log.debug("Получение информации о пользователе: {}", email);
 
-        UserEntity userEntity = getAuthenticatedUserEntity(authentication);
+        UserEntity userEntity = SecurityUtils.getAuthenticatedUser(userRepository, authentication);
         User userDto = userMapper.toDto(userEntity);
 
         log.trace("Информация о пользователе успешно получена: {}", email);
@@ -119,7 +89,7 @@ public class UserServiceImpl implements UserService {
         log.trace("Данные для обновления: firstName={}, lastName={}, phone={}",
                 updateUser.getFirstName(), updateUser.getLastName(), updateUser.getPhone());
 
-        UserEntity userEntity = getAuthenticatedUserEntity(authentication);
+        UserEntity userEntity =SecurityUtils.getAuthenticatedUser(userRepository, authentication);
 
         userMapper.updateEntityFromUpdateUser(updateUser, userEntity);
         userRepository.save(userEntity);
@@ -149,7 +119,6 @@ public class UserServiceImpl implements UserService {
      *
      * @param authentication объект аутентификации Spring Security
      * @param newPassword DTO с текущим и новым паролями
-     * @throws UserNotFoundException если пользователь не найден
      * @throws InvalidPasswordException если текущий пароль указан неверно
      * @throws ResponseStatusException (401 согласно openapi) если аутентифицированный
      * пользователь не найден в базе данных (крайний случай).
@@ -160,7 +129,7 @@ public class UserServiceImpl implements UserService {
         String email = authentication.getName();
         log.debug("Смена пароля для пользователя: {}", email);
 
-        UserEntity userEntity = getAuthenticatedUserEntity(authentication);
+        UserEntity userEntity = SecurityUtils.getAuthenticatedUser(userRepository, authentication);
 
         /* Проверяем текущий пароль */
         if (!passwordEncoder.matches(newPassword.getCurrentPassword(), userEntity.getPassword())) {
