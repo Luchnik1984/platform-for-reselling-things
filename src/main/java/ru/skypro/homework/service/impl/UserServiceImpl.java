@@ -2,10 +2,12 @@ package ru.skypro.homework.service.impl;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpStatus;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.server.ResponseStatusException;
 import ru.skypro.homework.dto.user.NewPassword;
 import ru.skypro.homework.dto.user.UpdateUser;
 import ru.skypro.homework.dto.user.User;
@@ -58,7 +60,13 @@ public class UserServiceImpl implements UserService {
         log.trace("Получение пользователя по email из аутентификации: {}", email);
 
         return userRepository.findByEmail(email)
-                .orElseThrow();
+                .orElseThrow(()-> {
+
+            log.warn("Несогласованность аутентификации:" +
+                    " пользователь {} не найден в БД после успешной аутентификации", email);
+            return new ResponseStatusException(HttpStatus.UNAUTHORIZED,
+                    "Несоответствие аутентификационных данных. " +
+                            "Пожалуйста, войдите в систему еще раз");});
     }
 
     /**
@@ -70,8 +78,8 @@ public class UserServiceImpl implements UserService {
      *
      * @param authentication объект аутентификации Spring Security
      * @return DTO с информацией о текущем пользователе
-     * @throws NoSuchElementException если аутентифицированный пользователь
-     * не найден в базе данных (крайний случай)
+     * @throws ResponseStatusException (401 согласно openapi) если аутентифицированный
+     * пользователь не найден в базе данных (крайний случай).
      */
     @Override
     @Transactional(readOnly = true)
@@ -100,8 +108,8 @@ public class UserServiceImpl implements UserService {
      * @param authentication объект аутентификации Spring Security
      * @param updateUser DTO с обновленными данными профиля
      * @return обновленный DTO пользователя (те же данные, что были переданы)
-     * @throws NoSuchElementException если аутентифицированный пользователь
-     * не найден в базе данных (крайний случай)
+     * @throws ResponseStatusException (401 согласно openapi) если аутентифицированный
+     * пользователь не найден в базе данных (крайний случай).
      */
     @Override
     @Transactional
@@ -143,8 +151,8 @@ public class UserServiceImpl implements UserService {
      * @param newPassword DTO с текущим и новым паролями
      * @throws UserNotFoundException если пользователь не найден
      * @throws InvalidPasswordException если текущий пароль указан неверно
-     * @throws NoSuchElementException если аутентифицированный пользователь
-     * не найден в базе данных (крайний случай)
+     * @throws ResponseStatusException (401 согласно openapi) если аутентифицированный
+     * пользователь не найден в базе данных (крайний случай).
      */
     @Override
     @Transactional

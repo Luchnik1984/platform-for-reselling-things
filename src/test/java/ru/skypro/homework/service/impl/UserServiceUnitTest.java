@@ -6,9 +6,11 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.http.HttpStatus;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.web.server.ResponseStatusException;
 import ru.skypro.homework.dto.user.NewPassword;
 import ru.skypro.homework.dto.user.UpdateUser;
 import ru.skypro.homework.dto.user.User;
@@ -18,7 +20,6 @@ import ru.skypro.homework.exceptions.InvalidPasswordException;
 import ru.skypro.homework.mapper.UserMapper;
 import ru.skypro.homework.repository.UserRepository;
 
-import java.util.NoSuchElementException;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -102,14 +103,16 @@ public class UserServiceUnitTest {
      * Должен выбросить NoSuchElementException.
      */
     @Test
-    void getCurrentUser_UserNotFound_ThrowsNoSuchElementException() {
+    void getCurrentUser_UserNotFound_ThrowsResponseStatusException() {
 
         when(authentication.getName()).thenReturn(TEST_EMAIL);
         when(userRepository.findByEmail(TEST_EMAIL)).thenReturn(Optional.empty());
 
         assertThatThrownBy(() -> userService.getCurrentUser(authentication))
-                .isInstanceOf(NoSuchElementException.class)
-                .hasMessage("No value present");
+                .isInstanceOf(ResponseStatusException.class)
+                .hasFieldOrPropertyWithValue("status", HttpStatus.UNAUTHORIZED)
+                .hasMessageContaining("Несоответствие аутентификационных данных. " +
+                        "Пожалуйста, войдите в систему еще раз");
 
         verify(authentication,times(2)).getName();
         verify(userRepository).findByEmail(TEST_EMAIL);
