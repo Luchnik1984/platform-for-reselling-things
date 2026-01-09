@@ -6,16 +6,17 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.http.HttpStatus;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.web.server.ResponseStatusException;
 import ru.skypro.homework.dto.user.NewPassword;
 import ru.skypro.homework.dto.user.UpdateUser;
 import ru.skypro.homework.dto.user.User;
 import ru.skypro.homework.entity.UserEntity;
 import ru.skypro.homework.enums.Role;
 import ru.skypro.homework.exceptions.InvalidPasswordException;
-import ru.skypro.homework.exceptions.UserNotFoundException;
 import ru.skypro.homework.mapper.UserMapper;
 import ru.skypro.homework.repository.UserRepository;
 
@@ -91,26 +92,29 @@ public class UserServiceUnitTest {
         User result = userService.getCurrentUser(authentication);
 
         assertThat(result).isEqualTo(expectedUser);
-        verify(authentication).getName();
+        verify(authentication, times(2)).getName();
         verify(userRepository).findByEmail(TEST_EMAIL);
         verify(userMapper).toDto(userEntity);
     }
 
     /**
-     * Тестирует сценарий, когда пользователь не найден по email.
-     * Должен выбросить UserNotFoundException.
+     * Тестирует сценарий, когда аутентифицированный пользователь не найден в БД.
+     * Это крайний случай нарушения целостности данных.
+     * Должен выбросить NoSuchElementException.
      */
     @Test
-    void getCurrentUser_UserNotFound_ThrowsUserNotFoundException() {
+    void getCurrentUser_UserNotFound_ThrowsResponseStatusException() {
 
         when(authentication.getName()).thenReturn(TEST_EMAIL);
         when(userRepository.findByEmail(TEST_EMAIL)).thenReturn(Optional.empty());
 
         assertThatThrownBy(() -> userService.getCurrentUser(authentication))
-                .isInstanceOf(UserNotFoundException.class)
-                .hasMessageContaining(TEST_EMAIL);
+                .isInstanceOf(ResponseStatusException.class)
+                .hasFieldOrPropertyWithValue("status", HttpStatus.UNAUTHORIZED)
+                .hasMessageContaining("Несоответствие аутентификационных данных. " +
+                        "Пожалуйста, войдите в систему еще раз");
 
-        verify(authentication).getName();
+        verify(authentication,times(2)).getName();
         verify(userRepository).findByEmail(TEST_EMAIL);
         verify(userMapper, never()).toDto(any());
     }
@@ -136,10 +140,39 @@ public class UserServiceUnitTest {
         UpdateUser result = userService.updateUser(authentication, updateUser);
 
         assertThat(result).isEqualTo(updateUser);
-        verify(authentication).getName();
+        verify(authentication, times(2)).getName();
         verify(userRepository).findByEmail(TEST_EMAIL);
         verify(userMapper).updateEntityFromUpdateUser(updateUser, userEntity);
         verify(userRepository).save(userEntity);
+    }
+
+    /**
+     * Тестирует частичное обновление профиля - только имя.
+     */
+    @Test
+    void updateUser_PartialUpdateFirstNameOnly_UpdatesOnlyFirstName() {
+
+        UserEntity userEntity = createTestUserEntity();
+        UpdateUser updateUser = new UpdateUser();
+        updateUser.setFirstName("ТолькоИмя"); /* Только имя, остальные поля null */
+
+        when(authentication.getName()).thenReturn(TEST_EMAIL);
+        when(userRepository.findByEmail(TEST_EMAIL)).thenReturn(Optional.of(userEntity));
+        when(userRepository.save(userEntity)).thenReturn(userEntity);
+
+        UpdateUser result = userService.updateUser(authentication, updateUser);
+
+        assertThat(result).isEqualTo(updateUser);
+        verify(userMapper).updateEntityFromUpdateUser(updateUser, userEntity);
+
+        verify(userMapper).updateEntityFromUpdateUser(
+                argThat(dto ->
+                        dto.getFirstName().equals("ТолькоИмя") &&
+                                dto.getLastName() == null &&
+                                dto.getPhone() == null
+                ),
+                eq(userEntity)
+        );
     }
 
     /**
@@ -166,7 +199,7 @@ public class UserServiceUnitTest {
 
         userService.updatePassword(authentication, newPassword);
 
-        verify(authentication).getName();
+        verify(authentication, times(2)).getName();
         verify(userRepository).findByEmail(TEST_EMAIL);
         verify(passwordEncoder).matches(TEST_PASSWORD, testHashedPassword);
         verify(passwordEncoder).encode(TEST_NEW_PASSWORD);
@@ -196,7 +229,7 @@ public class UserServiceUnitTest {
                 .isInstanceOf(InvalidPasswordException.class)
                 .hasMessage("Неверный пароль");
 
-        verify(authentication).getName();
+        verify(authentication, times(2)).getName();
         verify(userRepository).findByEmail(TEST_EMAIL);
         verify(passwordEncoder).matches(TEST_WRONG_PASSWORD, testHashedPassword);
         verify(passwordEncoder, never()).encode(any());
