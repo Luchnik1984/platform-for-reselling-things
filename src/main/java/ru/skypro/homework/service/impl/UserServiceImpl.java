@@ -16,6 +16,8 @@ import ru.skypro.homework.mapper.UserMapper;
 import ru.skypro.homework.repository.UserRepository;
 import ru.skypro.homework.service.UserService;
 
+import java.util.NoSuchElementException;
+
 /**
  * Реализация сервиса для работы с пользователями.
  * Обеспечивает бизнес-логику управления профилями пользователей.
@@ -39,18 +41,37 @@ public class UserServiceImpl implements UserService {
     private final PasswordEncoder passwordEncoder;
 
     /**
+     * Получает сущность пользователя по данным аутентификации.
+     * <p>
+     * Поскольку пользователь уже успешно аутентифицирован Spring Security,
+     * предполагается, что он существует в базе данных. В случае нарушения
+     * этого условия выбрасывается {@link NoSuchElementException}, что указывает
+     * на критическое нарушение целостности данных системы.
+     *
+     * @param authentication объект аутентификации Spring Security
+     * @return сущность пользователя
+     * @throws NoSuchElementException если аутентифицированный пользователь
+     *                                не найден в базе данных (крайний случай)
+     */
+    private UserEntity getAuthenticatedUserEntity(Authentication authentication) {
+        String email = authentication.getName();
+        log.trace("Получение пользователя по email из аутентификации: {}", email);
+
+        return userRepository.findByEmail(email)
+                .orElseThrow();
+    }
+
+    /**
+     * {@inheritDoc}
+     * <p>
      * Получает информацию о текущем аутентифицированном пользователе.
-     * <p>Алгоритм работы:
-     * <ol>
-     *   <li>Извлекает email пользователя из {@link Authentication#getName()}</li>
-     *   <li>Ищет пользователя в БД по email через {@link UserRepository#findByEmail(String)}</li>
-     *   <li>Если пользователь не найден - выбрасывает {@link UserNotFoundException}</li>
-     *   <li>Преобразует {@link UserEntity} в {@link User} DTO через {@link UserMapper}</li>
-     * </ol>
+     * Гарантирует, что пользователь существует в базе данных, так как
+     * он уже прошел проверку подлинности Spring Security.
      *
      * @param authentication объект аутентификации Spring Security
      * @return DTO с информацией о текущем пользователе
-     * @throws UserNotFoundException если пользователь с указанным email не найден
+     * @throws NoSuchElementException если аутентифицированный пользователь
+     * не найден в базе данных (крайний случай)
      */
     @Override
     @Transactional(readOnly = true)
@@ -58,14 +79,17 @@ public class UserServiceImpl implements UserService {
         String email = authentication.getName();
         log.debug("Получение информации о пользователе: {}", email);
 
-        UserEntity userEntity = userRepository.findByEmail(email)
-                .orElseThrow(() -> new UserNotFoundException(email));
+        UserEntity userEntity = getAuthenticatedUserEntity(authentication);
+        User userDto = userMapper.toDto(userEntity);
 
-        return userMapper.toDto(userEntity);
+        log.trace("Информация о пользователе успешно получена: {}", email);
+        return userDto;
     }
 
     /**
-     * Обновляет профиль текущего пользователя.
+     * {@inheritDoc}
+     * <p>
+     * Обновляет профиль текущего аутентифицированного пользователя.
      * <p>Обновляет только переданные поля (частичное обновление):
      * <ul>
      *   <li>Имя (firstName)</li>
@@ -76,16 +100,18 @@ public class UserServiceImpl implements UserService {
      * @param authentication объект аутентификации Spring Security
      * @param updateUser DTO с обновленными данными профиля
      * @return обновленный DTO пользователя (те же данные, что были переданы)
-     * @throws UserNotFoundException если пользователь не найден
+     * @throws NoSuchElementException если аутентифицированный пользователь
+     * не найден в базе данных (крайний случай)
      */
     @Override
     @Transactional
     public UpdateUser updateUser(Authentication authentication, UpdateUser updateUser) {
         String email = authentication.getName();
         log.debug("Обновление профиля пользователя: {}", email);
+        log.trace("Данные для обновления: firstName={}, lastName={}, phone={}",
+                updateUser.getFirstName(), updateUser.getLastName(), updateUser.getPhone());
 
-        UserEntity userEntity = userRepository.findByEmail(email)
-                .orElseThrow(() -> new UserNotFoundException(email));
+        UserEntity userEntity = getAuthenticatedUserEntity(authentication);
 
         userMapper.updateEntityFromUpdateUser(updateUser, userEntity);
         userRepository.save(userEntity);
@@ -95,7 +121,9 @@ public class UserServiceImpl implements UserService {
     }
 
     /**
-     * Обновляет пароль текущего пользователя.
+     * {@inheritDoc}
+     * <p>
+     * Обновляет пароль текущего аутентифицированного пользователя.
      * <p>Требования безопасности:
      * <ol>
      *   <li>Текущий пароль должен быть указан верно</li>
@@ -115,6 +143,8 @@ public class UserServiceImpl implements UserService {
      * @param newPassword DTO с текущим и новым паролями
      * @throws UserNotFoundException если пользователь не найден
      * @throws InvalidPasswordException если текущий пароль указан неверно
+     * @throws NoSuchElementException если аутентифицированный пользователь
+     * не найден в базе данных (крайний случай)
      */
     @Override
     @Transactional
@@ -122,8 +152,7 @@ public class UserServiceImpl implements UserService {
         String email = authentication.getName();
         log.debug("Смена пароля для пользователя: {}", email);
 
-        UserEntity userEntity = userRepository.findByEmail(email)
-                .orElseThrow(() -> new UserNotFoundException(email));
+        UserEntity userEntity = getAuthenticatedUserEntity(authentication);
 
         /* Проверяем текущий пароль */
         if (!passwordEncoder.matches(newPassword.getCurrentPassword(), userEntity.getPassword())) {

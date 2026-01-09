@@ -5,9 +5,9 @@ import org.springframework.web.bind.annotation.ResponseStatus;
 
 /**
  * Исключение, выбрасываемое когда предоставлен неверный пароль.
- * Возвращает HTTP статус 400 (Bad Request).
+ *  Возвращает HTTP статус 401 (Unauthorized) для соответствия OpenAPI.
  */
-@ResponseStatus(HttpStatus.BAD_REQUEST)
+@ResponseStatus(HttpStatus.UNAUTHORIZED)
 public class InvalidPasswordException extends RuntimeException {
 
     /**
