@@ -8,7 +8,7 @@ import ru.skypro.homework.entity.UserEntity;
 import ru.skypro.homework.repository.UserRepository;
 
 /**
- * Утилитный класс для работы с аутентификацией и безопасностью.
+ * Утилитарный класс для работы с аутентификацией и безопасностью.
  * Содержит общие методы для получения аутентифицированного пользователя
  * и обработки ошибок аутентификации.
  *
@@ -60,39 +60,4 @@ public class SecurityUtils {
                 });
     }
 
-    /**
-     * Проверяет, является ли пользователь администратором.
-     * Вспомогательный метод для проверки прав доступа.
-     *
-     * @param authentication объект аутентификации
-     * @return true если пользователь имеет роль ADMIN
-     */
-    public static boolean isAdmin(Authentication authentication) {
-        return authentication.getAuthorities().stream()
-                .anyMatch(authority -> authority.getAuthority().equals("ROLE_ADMIN"));
-    }
-
-    /**
-     * Проверяет, имеет ли пользователь доступ к ресурсу.
-     * Пользователь имеет доступ если:
-     * <ul>
-     *   <li>Он автор ресурса (сравнивает email)</li>
-     *   <li>Он администратор (роль ADMIN)</li>
-     * </ul>
-     *
-     * @param resourceOwnerEmail email владельца ресурса
-     * @param authentication объект аутентификации текущего пользователя
-     * @return true если пользователь имеет права на ресурс
-     */
-    public static boolean hasAccess(String resourceOwnerEmail, Authentication authentication) {
-        String currentUserEmail = authentication.getName();
-
-        // Пользователь имеет доступ к своим ресурсам
-        if (resourceOwnerEmail.equals(currentUserEmail)) {
-            return true;
-        }
-
-        // Администратор имеет доступ ко всем ресурсам
-        return isAdmin(authentication);
-    }
 }
