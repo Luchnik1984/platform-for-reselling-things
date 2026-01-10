@@ -2,7 +2,6 @@ package ru.skypro.homework.service.impl;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Service;
 
@@ -13,6 +12,7 @@ import ru.skypro.homework.dto.comments.CreateOrUpdateComment;
 import ru.skypro.homework.entity.AdEntity;
 import ru.skypro.homework.entity.CommentEntity;
 import ru.skypro.homework.entity.UserEntity;
+import ru.skypro.homework.exceptions.AccessDeniedException;
 import ru.skypro.homework.exceptions.AdNotFoundException;
 import ru.skypro.homework.exceptions.CommentNotFoundException;
 import ru.skypro.homework.mapper.CommentMapper;
@@ -133,19 +133,24 @@ public class CommentServiceImpl implements CommentService {
      * {@inheritDoc}
      *
      * <p>Проверка прав доступа:
+     *
      * <ol>
-     *   <li>Находит комментарий по ID</li>
-     *   <li>Проверяет, принадлежит ли комментарий указанному объявлению</li>
-     *   <li>Проверяет, является ли пользователь автором комментария</li>
-     *   <li>Если нет - проверяет роль ADMIN через {@code @PreAuthorize}</li>
-     *   <li>Удаляет комментарий</li>
+     *   <li>USER может удалять только свои комментарии</li>
+     *   <li>ADMIN может удалять любые комментарии</li>
+     *   <li>При попытке удалить чужой комментарий - {@link AccessDeniedException}</li>
      * </ol>
      *
-     * <p>Безопасность: Проверка {@code commentEntity.getAuthor().getEmail().equals(email)}
+     * <p>Безопасность: Проверка {@code commentEntity.getAuthor().getEmail().equals(email)} для проверки роли
+     * и явную проверку авторства {@code commentEntity.getAuthor().getEmail().equals(email)}
+     *
+     * @param adId идентификатор объявления, к которому принадлежит комментарий
+     * @param commentId идентификатор удаляемого комментария
+     * @param authentication объект аутентификации текущего пользователя
+     * @throws CommentNotFoundException если комментарий не найден
+     * @throws AccessDeniedException если пользователь не имеет прав на удаление
      */
     @Override
     @Transactional
-    @PreAuthorize("hasRole('ADMIN')")
     public void deleteComment(Integer adId, Integer commentId, Authentication authentication) {
 
         String email = authentication.getName();
@@ -161,9 +166,13 @@ public class CommentServiceImpl implements CommentService {
             throw new IllegalArgumentException("Комментарий не принадлежит указанному объявлению");
         }
 
-        if (!commentEntity.getAuthor().getEmail().equals(email)) {
-            // Если не автор, то должен быть ADMIN (проверено @PreAuthorize)
-            log.debug("Удаление комментария администратором");
+        // Проверка прав доступа с использованием SecurityUtils
+        boolean isAdmin = SecurityUtils.isAdmin(authentication);
+        boolean isAuthor = commentEntity.getAuthor().getEmail().equals(email);
+
+        if (!isAdmin && !isAuthor) {
+            log.warn("Попытка удаления чужого комментария ID: {} пользователем: {}", commentId, email);
+            throw new AccessDeniedException("comment", commentId);
         }
 
         commentRepository.delete(commentEntity);
@@ -173,12 +182,26 @@ public class CommentServiceImpl implements CommentService {
     /**
      * {@inheritDoc}
      *
+     * <p>Проверка прав доступа:
+     * <ol>
+     *   <li>USER может обновлять только свои комментарии</li>
+     *   <li>ADMIN может обновлять любые комментарии</li>
+     *   <li>При попытке обновить чужой комментарий - {@link AccessDeniedException}</li>
+     * </ol>
+     *
      * <p>Особенность: Обновляет только текст комментария,
      * дата создания и автор остаются неизменными.
+     *
+     * @param adId идентификатор объявления, к которому принадлежит комментарий
+     * @param commentId идентификатор обновляемого комментария
+     * @param authentication объект аутентификации текущего пользователя
+     * @param dto DTO с обновлённым текстом комментария
+     * @return обновлённый комментарий в формате DTO
+     * @throws CommentNotFoundException если комментарий не найден
+     * @throws AccessDeniedException если пользователь не имеет прав на обновление
      */
     @Override
     @Transactional
-    @PreAuthorize("hasRole('ADMIN')")
     public Comment updateComment(Integer adId, Integer commentId,
                                  Authentication authentication, CreateOrUpdateComment dto) {
         String email = authentication.getName();
@@ -194,10 +217,13 @@ public class CommentServiceImpl implements CommentService {
             throw new IllegalArgumentException("Комментарий не принадлежит указанному объявлению");
         }
 
-        if (!commentEntity.getAuthor().getEmail().equals(email)) {
+        // Проверка прав доступа с использованием SecurityUtils
+        boolean isAdmin = SecurityUtils.isAdmin(authentication);
+        boolean isAuthor = commentEntity.getAuthor().getEmail().equals(email);
 
-            // Если не автор, то должен быть ADMIN (проверено @PreAuthorize)
-            log.debug("Обновление комментария администратором");
+        if (!isAdmin && !isAuthor) {
+            log.warn("Попытка обновления чужого комментария ID: {} пользователем: {}", commentId, email);
+            throw new AccessDeniedException("comment", commentId);
         }
 
         // Обновляем сущность (только текст, через маппер) и сохраняем

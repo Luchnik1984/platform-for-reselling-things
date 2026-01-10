@@ -2,7 +2,6 @@ package ru.skypro.homework.service.impl;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -13,6 +12,7 @@ import ru.skypro.homework.dto.ads.CreateOrUpdateAd;
 import ru.skypro.homework.dto.ads.ExtendedAd;
 import ru.skypro.homework.entity.AdEntity;
 import ru.skypro.homework.entity.UserEntity;
+import ru.skypro.homework.exceptions.AccessDeniedException;
 import ru.skypro.homework.exceptions.AdNotFoundException;
 import ru.skypro.homework.mapper.AdMapper;
 import ru.skypro.homework.repository.AdRepository;
@@ -169,17 +169,16 @@ public class AdServiceImpl implements AdService {
      * <p>Проверка прав доступа:
      * <ol>
      *   <li>Находит объявление по ID</li>
-     *   <li>Проверяет, является ли текущий пользователь автором</li>
-     *   <li>Если нет - проверяет роль ADMIN через {@code @PreAuthorize}</li>
+     *   <li>USER может обновлять только свои объявления</li>
+     *   <li>ADMIN может обновлять любые объявления</li>
      *   <li>Обновляет только переданные поля (частичное обновление)</li>
      * </ol>
      *
-     * <p>Безопасность: Явная проверка {@code adEntity.getAuthor().getEmail().equals(email)}
-     * соответствует требованиям "Этапа 3".
+     * <p>Безопасность: Использует {@link SecurityUtils#isAdmin(Authentication)} для проверки роли
+     * и явную проверку авторства {@code adEntity.getAuthor().getEmail().equals(email)}
      */
     @Override
     @Transactional
-    @PreAuthorize("hasRole('ADMIN')")
     public Ad updateAd(Integer id, Authentication authentication, CreateOrUpdateAd updateAd) {
         String email = authentication.getName();
         log.debug("Обновление объявления ID: {} пользователем: {}", id, email);
@@ -187,10 +186,13 @@ public class AdServiceImpl implements AdService {
         AdEntity adEntity = adRepository.findById(id)
                 .orElseThrow(() -> new AdNotFoundException(id));
 
-        // Проверка прав: либо автор, либо ADMIN (аннотация выше)
-        if (!adEntity.getAuthor().getEmail().equals(email)) {
-            // Если не автор, то должен быть ADMIN (проверено @PreAuthorize)
-            log.debug("Обновление объявления администратором");
+        // Проверка прав доступа с использованием SecurityUtils
+        boolean isAdmin = SecurityUtils.isAdmin(authentication);
+        boolean isAuthor = adEntity.getAuthor().getEmail().equals(email);
+
+        if (!isAdmin && !isAuthor) {
+            log.warn("Попытка обновления чужого объявления ID: {} пользователем: {}", id, email);
+            throw new AccessDeniedException("ad", id);
         }
 
         adMapper.updateEntityFromDto(updateAd, adEntity);
@@ -204,17 +206,23 @@ public class AdServiceImpl implements AdService {
     /**
      * {@inheritDoc}
      *
+     * <p>Проверка прав доступа:
+     * <ol>
+     *   <li>USER может удалять только свои объявления</li>
+     *   <li>ADMIN может удалять любые объявления</li>
+     *   <li>При попытке удалить чужое объявление - {@link AccessDeniedException}</li>
+     * </ol>
+     *
      * <p>Каскадное удаление: При удалении объявления
      * автоматически удаляются все связанные комментарии
      * благодаря настройке {@code cascade = CascadeType.ALL}
      * в сущности {@link AdEntity}.
      *
-     * <p>Безопасность: Используется явная проверка прав
-     * перед выполнением операции удаления.
+     * <p>Безопасность: Использует {@link SecurityUtils#isAdmin(Authentication)} для проверки роли
+     * и явную проверку авторства {@code adEntity.getAuthor().getEmail().equals(email)}
      */
     @Override
     @Transactional
-    @PreAuthorize("hasRole('ADMIN')")
     public void deleteAd(Integer id, Authentication authentication) {
         String email = authentication.getName();
         log.debug("Удаление объявления ID: {} пользователем: {}", id, email);
@@ -222,10 +230,13 @@ public class AdServiceImpl implements AdService {
         AdEntity adEntity = adRepository.findById(id)
                 .orElseThrow(() -> new AdNotFoundException(id));
 
-        // Проверка прав: либо автор, либо ADMIN (аннотация выше)
-        if (!adEntity.getAuthor().getEmail().equals(email)) {
-            // Если не автор, то должен быть ADMIN (проверено @PreAuthorize)
-            log.debug("Удаление объявления администратором");
+        // Проверка прав доступа с использованием SecurityUtils
+        boolean isAdmin = SecurityUtils.isAdmin(authentication);
+        boolean isAuthor = adEntity.getAuthor().getEmail().equals(email);
+
+        if (!isAdmin && !isAuthor) {
+            log.warn("Попытка удаления чужого объявления ID: {} пользователем: {}", id, email);
+            throw new AccessDeniedException("ad", id);
         }
 
         adRepository.delete(adEntity);

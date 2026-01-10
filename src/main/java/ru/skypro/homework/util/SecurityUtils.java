@@ -60,4 +60,40 @@ public class SecurityUtils {
                 });
     }
 
+    /**
+     * Проверяет, имеет ли аутентифицированный пользователь роль ADMIN.
+     * Используется для проверки прав доступа в бизнес-логике.
+     *
+     * <p>Алгоритм работы:
+     * <ol>
+     *   <li>Извлекает authorities из объекта {@link Authentication}</li>
+     *   <li>Ищет authority с именем "ROLE_ADMIN"</li>
+     *   <li>Возвращает true если роль найдена</li>
+     * </ol>
+     *
+     * <p>Соответствие ролям в системе:
+     * <ul>
+     *   <li>USER -> authorities: ["ROLE_USER"]</li>
+     *   <li>ADMIN -> authorities: ["ROLE_ADMIN", "ROLE_USER"] (обычно)</li>
+     * </ul>
+     *
+     * @param authentication объект аутентификации Spring Security
+     * @return true если пользователь имеет роль ADMIN, иначе false
+     */
+    public static boolean isAdmin(Authentication authentication) {
+        if (authentication == null) {
+            log.warn("Попытка проверки роли ADMIN для null аутентификации");
+            return false;
+        }
+
+        if (authentication.getAuthorities() == null) {
+            log.warn("Аутентификация не содержит authorities: {}", authentication);
+            return false;
+        }
+
+        return authentication.getAuthorities().stream()
+                .anyMatch(grantedAuthority ->
+                        "ROLE_ADMIN".equals(grantedAuthority.getAuthority()));
+    }
+
 }
