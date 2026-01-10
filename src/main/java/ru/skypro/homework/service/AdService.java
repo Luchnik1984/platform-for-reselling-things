@@ -89,5 +89,6 @@ public interface AdService {
      * @throws AccessDeniedException если пользователь не имеет прав
      */
     void deleteAd(Integer id, Authentication authentication);
+
 }
 

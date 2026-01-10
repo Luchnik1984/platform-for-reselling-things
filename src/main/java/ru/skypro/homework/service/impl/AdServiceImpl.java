@@ -232,22 +232,4 @@ public class AdServiceImpl implements AdService {
         log.info("Объявление ID: {} удалено пользователем {}", id, email);
     }
 
-    /**
-     * Вспомогательный метод для проверки прав доступа.
-     * Используется в методах без {@code @PreAuthorize}.
-     *
-     * @param adEntity сущность объявления
-     * @param email email текущего пользователя
-     * @return true если пользователь имеет права на операцию
-     */
-    private boolean hasPermission(AdEntity adEntity, String email, Authentication authentication) {
-        // Автор всегда имеет права
-        if (adEntity.getAuthor().getEmail().equals(email)) {
-            return true;
-        }
-
-        // ADMIN имеет права (проверка роли)
-        return authentication.getAuthorities().stream()
-                .anyMatch(auth -> auth.getAuthority().equals("ROLE_ADMIN"));
-    }
 }
