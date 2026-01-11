@@ -1,32 +1,76 @@
 package ru.skypro.homework.service.impl;
 
-import org.springframework.security.crypto.password.PasswordEncoder;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Service;
-import ru.skypro.homework.entity.UserEntity;
-import ru.skypro.homework.repository.UserRepository;
 import ru.skypro.homework.service.AuthService;
 
-import java.util.Optional;
-
+/**
+ * Сервис для работы с аутентификацией.
+ * Использует JdbcUserDetailsManager через AuthenticationManager.
+ *
+ * <p>Основная функция: Проверка учетных данных для эндпоинта /login.
+ * JdbcUserDetailsManager автоматически загружает пользователей из БД.
+ */
+@Slf4j
 @Service
+@RequiredArgsConstructor
 public class AuthServiceImpl implements AuthService {
 
 
-    private final PasswordEncoder encoder;
-    private final UserRepository repository;
+    private final AuthenticationManager authenticationManager;
 
-    public AuthServiceImpl(PasswordEncoder passwordEncoder, UserRepository repository) {
-        this.encoder = passwordEncoder;
-        this.repository = repository;
-    }
-
+    /**
+     * Проверяет учетные данные пользователя.
+     * Использует AuthenticationManager, который делегирует JdbcUserDetailsManager.
+     *
+     * <p>Алгоритм:
+     * <ol></ol>
+     * <li> Создает UsernamePasswordAuthenticationToken</li>
+     * <li> Передает в AuthenticationManager</li>
+     * <li> AuthenticationManager использует JdbcUserDetailsManager для проверки</li>
+     * </ol>
+     *
+     * @param username email пользователя
+     * @param password пароль пользователя
+     * @return true если учетные данные верны
+     */
     @Override
-    public boolean login(String userName, String password) {
+    public boolean login(String username, String password) {
+        log.debug("Проверка учетных данных для пользователя: {}", username);
 
-        Optional<UserEntity> entity = repository.findByEmail(userName);
+        try {
+            // Создаем токен аутентификации
+            UsernamePasswordAuthenticationToken authToken =
+                    new UsernamePasswordAuthenticationToken(username, password);
 
-        if (entity.isEmpty()) return false;
+            log.trace("Токен аутентификации создан для: {}", username);
 
-        return encoder.matches(password, entity.get().getPassword());
+            // AuthenticationManager проверяет токен через JdbcUserDetailsManager
+            Authentication authentication = authenticationManager.authenticate(authToken);
+
+            // Проверяем результат
+            boolean isAuthenticated = authentication.isAuthenticated();
+
+            if (isAuthenticated) {
+                log.debug("Аутентификация успешна для пользователя: {}", username);
+            } else {
+                log.warn("Аутентификация не удалась для пользователя: {}", username);
+            }
+            return isAuthenticated;
+
+        } catch (BadCredentialsException e) {
+            log.warn("Неверные учетные данные для пользователя: {}", username);
+            return false;
+        } catch (Exception e) {
+
+            log.error("Ошибка при аутентификации пользователя {}: {}",
+                    username, e.getMessage(), e);
+            return false;
+        }
     }
 }
