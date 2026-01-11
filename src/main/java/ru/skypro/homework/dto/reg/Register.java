@@ -4,6 +4,10 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 import ru.skypro.homework.enums.Role;
 
+/**
+ * DTO для регистрации нового пользователя.
+ * Содержит данные: логин, пароль, имя, фамилия, телефон, роль.
+ */
 @Data
 public class Register {
 

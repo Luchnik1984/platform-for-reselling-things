@@ -4,11 +4,8 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
-import org.springframework.security.core.userdetails.User;
-import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.security.provisioning.InMemoryUserDetailsManager;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
@@ -59,30 +56,6 @@ public class WebSecurityConfig {
             "/error"
     };
 
-    /**
-     * Создаёт тестовых пользователей в памяти.
-     * Используется для тестирования на Этапе 1-2.
-     * На Этапе 3 будет заменён на UserDetailsService из БД.
-     */
-    @Bean
-    public InMemoryUserDetailsManager userDetailsService(PasswordEncoder passwordEncoder) {
-        UserDetails user =
-                User.builder()
-                        .username("user@gmail.com")
-                        .password("password")
-                        .passwordEncoder(passwordEncoder::encode)
-                        .roles(Role.USER.name())
-                        .build();
-
-        UserDetails admin =
-                User.builder()
-                        .username("admin@gmail.com")
-                        .password("admin")
-                        .passwordEncoder(passwordEncoder::encode)
-                        .roles(Role.ADMIN.name())
-                        .build();
-        return new InMemoryUserDetailsManager(user,admin);
-    }
 
     /**
      * Основная цепочка фильтров безопасности.

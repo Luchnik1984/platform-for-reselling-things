@@ -1,31 +1,32 @@
 package ru.skypro.homework.service.impl;
 
-import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.security.provisioning.UserDetailsManager;
 import org.springframework.stereotype.Service;
+import ru.skypro.homework.entity.UserEntity;
+import ru.skypro.homework.repository.UserRepository;
 import ru.skypro.homework.service.AuthService;
+
+import java.util.Optional;
 
 @Service
 public class AuthServiceImpl implements AuthService {
 
-    private final UserDetailsManager manager;
-    private final PasswordEncoder encoder;
 
-    public AuthServiceImpl(UserDetailsManager manager,
-                           PasswordEncoder passwordEncoder) {
-        this.manager = manager;
+    private final PasswordEncoder encoder;
+    private final UserRepository repository;
+
+    public AuthServiceImpl(PasswordEncoder passwordEncoder, UserRepository repository) {
         this.encoder = passwordEncoder;
+        this.repository = repository;
     }
 
     @Override
     public boolean login(String userName, String password) {
-        if (!manager.userExists(userName)) {
-            return false;
-        }
-        UserDetails userDetails = manager.loadUserByUsername(userName);
-        return encoder.matches(password, userDetails.getPassword());
+
+        Optional<UserEntity> entity = repository.findByEmail(userName);
+
+        if (entity.isEmpty()) return false;
+
+        return encoder.matches(password, entity.get().getPassword());
     }
-
-
 }
