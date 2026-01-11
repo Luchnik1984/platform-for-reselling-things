@@ -9,24 +9,40 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 import ru.skypro.homework.dto.comments.Comment;
 import ru.skypro.homework.dto.comments.Comments;
 import ru.skypro.homework.dto.comments.CreateOrUpdateComment;
-import ru.skypro.homework.repository.UserRepository;
 import ru.skypro.homework.service.CommentService;
 
 import javax.validation.Valid;
-import java.util.List;
 
 /**
  * REST‑контроллер для работы с комментариями к объявлениям.
  * Отвечает за получение списка комментариев, добавление новых,
  * обновление и удаление существующих комментариев.
- * Данный контроллер реализует минимальный набор эндпоинтов
- * в виде заглушек и возвращает пустые DTO‑объекты.
- * На начальном этапе реализованы заглушки всех методов.
- * Полная бизнес‑логика будет добавлена на следующих этапах разработки.
+ *
+ * <p>Архитектура: Контроллер делегирует бизнес-логику {@link CommentService}.
+ * Выполняет:
+ * <ul>
+ *   <li>Валидацию входящих данных (аннотации {@code @Valid})</li>
+ *   <li>Извлечение параметров из запроса ({@code @PathVariable})</li>
+ *   <li>Формирование HTTP-ответов с правильными статусами</li>
+ *   <li>Передачу контекста аутентификации в сервисный слой</li>
+ * </ul>
+ *
+ * <p>Проверка прав доступа:
+ * <ul>
+ *   <li>USER: может управлять только своими комментариями</li>
+ *   <li>ADMIN: может управлять всеми комментариями</li>
+ *   <li>Проверка выполняется на уровне сервиса ({@link CommentService})</li>
+ * </ul>
+ *
+ * @see CommentService сервис, реализующий бизнес-логику операций с комментариями
+ * @see Comment DTO для отображения информации о комментарии
+ * @see Comments DTO-обёртка для списка комментариев
+ * @see CreateOrUpdateComment DTO для получения данных от клиента при создании/обновлении
  */
 @Slf4j
 @CrossOrigin(value = "http://localhost:3000")
@@ -38,127 +54,232 @@ import java.util.List;
 public class CommentController {
 
     private final CommentService commentService;
-    private final UserRepository userRepository;
-
 
     /**
      * Получение списка комментариев для указанного объявления.
-     * На данном этапе реализована заглушка: возвращается пустой объект {@link Comments}
-     * с нулевым количеством комментариев и пустым списком результатов.
+     * <p>Эндпоинт доступен для всех аутентифицированных пользователей.
+     * Возвращает все комментарии, относящиеся к указанному объявлению,
+     * включая информацию об авторах комментариев.
      *
-     * @param id идентификатор объявления
-     * @return пустой {@link Comments}
+     * <p>Особенности реализации:
+     * <ul>
+     *   <li>Использует {@link CommentService#getComments(Integer)} для получения данных</li>
+     *   <li>Возвращает обёртку {@link Comments} с общим количеством и списком</li>
+     *   <li>Автоматически преобразует исключения в HTTP статусы</li>
+     * </ul>
+     *
+     * @return {@link Comments} со списком комментариев объявления
      */
-    @Operation(summary = "Получение комментариев объявления")
+    @Operation(
+            summary = "Получение комментариев объявления",
+            description = "Возвращает список всех комментариев, относящихся к указанному объявлению. " +
+                    "Включает информацию об авторах комментариев (имя, аватар). " +
+                    "Требуется аутентификация."
+    )
     @ApiResponses(value = {
             @ApiResponse(
                     responseCode = "200",
                     description = "OK",
                     content = @Content(schema = @Schema(implementation = Comments.class))
             ),
-            @ApiResponse(responseCode = "401", description = "Unauthorized"),
-            @ApiResponse(responseCode = "404", description = "Not found")
+            @ApiResponse(responseCode = "401",
+                    description = "Unauthorized - требуется аутентификация",
+                    content = @Content(schema = @Schema(hidden = true))
+            ),
+            @ApiResponse(responseCode = "404",
+                    description = "Not found - объявление не найдено",
+                    content = @Content(schema = @Schema(hidden = true))
+            )
     })
     @GetMapping("/{id}/comments")
     @ResponseStatus(HttpStatus.OK)
     public Comments getComments(@PathVariable("id") Integer id) {
         log.info("Получение комментариев для объявления ID={}", id);
 
-        return new Comments(0, List.of()); // Заглушка: возвращаем пустой список
+        Comments comments = commentService.getComments(id);
+
+        log.debug("Найдено {} комментариев для объявления ID={}", comments.getCount(), id);
+
+        return comments;
     }
 
     /**
      * Добавление нового комментария к объявлению.
-     * На данном этапе реализована заглушка: игнорирует тело запроса
-     * и возвращает пустой объект {@link Comment} без заполненных полей.
+     * <p>Эндпоинт доступен для всех аутентифицированных пользователей.
+     * Автор комментария определяется автоматически из данных аутентификации.
+     * Время создания комментария устанавливается сервером.
      *
-     * @param id  идентификатор объявления
-     * @param dto DTO с текстом комментария
-     * @return пустой {@link Comment}
+     * <p>Особенности реализации:
+     * <ul>
+     *   <li>Использует {@link CommentService#addComment(Integer, Authentication, CreateOrUpdateComment)}</li>
+     *   <li>Автор определяется автоматически из {@link Authentication}</li>
+     *   <li>Валидирует входящие данные через {@code @Valid}</li>
+     *   <li>Возвращает созданный комментарий с заполненными серверными полями</li>
+     * </ul>
+     *
+     * @param id идентификатор объявления, к которому добавляется комментарий
+     * @param dto DTO {@link CreateOrUpdateComment}, содержащий текст комментария
+     * @param authentication объект аутентификации текущего пользователя
+     * @return созданный комментарий в формате {@link Comment}
      */
-    @Operation(summary = "Добавление комментария к объявлению")
+    @Operation(
+            summary = "Добавление комментария к объявлению",
+            description = "Создаёт новый комментарий к указанному объявлению. " +
+                    "Автор комментария определяется автоматически из данных аутентификации. " +
+                    "Время создания устанавливается сервером. " +
+                    "Требуется аутентификация."
+    )
     @ApiResponses(value = {
             @ApiResponse(
                     responseCode = "200",
-                    description = "OK",
+                    description = "OK - комментарий успешно создан",
                     content = @Content(schema = @Schema(implementation = Comment.class))
             ),
-            @ApiResponse(responseCode = "401", description = "Unauthorized"),
-            @ApiResponse(responseCode = "404", description = "Not found")
+            @ApiResponse(responseCode = "401",
+                    description = "Unauthorized - требуется аутентификация",
+                    content = @Content(schema = @Schema(hidden = true))
+            ),
+            @ApiResponse(responseCode = "404",
+                    description = "Not found - объявление не найдено",
+                    content = @Content(schema = @Schema(hidden = true))
+            )
     })
     @PostMapping("/{id}/comments")
     @ResponseStatus(HttpStatus.OK)
     public Comment addComment(@PathVariable("id") Integer id,
-                              @Valid @RequestBody CreateOrUpdateComment dto) {
-        log.info("Добавление комментария к объявлению ID={}", id);
-        // Заглушка: создаем фиктивный комментарий
-        Comment comment = new Comment();
-        comment.setAuthor(1);
-        comment.setAuthorImage("/images/users/1-avatar.jpg");
-        comment.setAuthorFirstName("Иван");
-        comment.setCreatedAt(System.currentTimeMillis());
-        comment.setPk(1);
-        comment.setText(dto.getText() != null ? dto.getText() : "Тестовый комментарий");
-        return comment;
+                              @Valid @RequestBody CreateOrUpdateComment dto,
+                              Authentication authentication) {
+        log.info("Добавление комментария к объявлению ID={} пользователем: {}",
+                id, authentication.getName());
+        log.debug("Текст комментария: {}", dto.getText());
+
+        Comment createdComment = commentService.addComment(id, authentication, dto);
+
+        log.info("Комментарий ID={} успешно создан для объявления ID={}",
+                createdComment.getPk(), id);
+        return createdComment;
+
     }
 
     /**
      * Удаление комментария по идентификатору для указанного объявления.
-     * На данном этапе реализована заглушка: метод не выполняет фактического удаления.
+     * <p>Проверка прав доступа:
+     * <ul>
+     *   <li>USER может удалять только свои комментарии</li>
+     *   <li>ADMIN может удалять любые комментарии</li>
+     *   <li>При попытке удалить чужой комментарий возвращается 403 Forbidden</li>
+     * </ul>
      *
-     * @param adId      идентификатор объявления
-     * @param commentId идентификатор комментария
-     *                  Логируем удаление - заглушка
+     * <p>Особенности реализации:
+     * <ul>
+     *   <li>Использует {@link CommentService#deleteComment(Integer, Integer, Authentication)}</li>
+     *   <li>Проверка прав доступа выполняется на уровне сервиса</li>
+     *   <li>Возвращает статус 200 OK при успешном удалении</li>
+     * </ul>
+     *
+     * @param adId идентификатор объявления
+     * @param commentId идентификатор удаляемого комментария
+     * @param authentication объект аутентификации текущего пользователя
      */
-    @Operation(summary = "Удаление комментария")
+    @Operation(
+            summary = "Удаление комментария",
+            description = "Удаляет комментарий по идентификатору. " +
+                    "USER может удалять только свои комментарии. " +
+                    "ADMIN может удалять любые комментарии. " +
+                    "Требуется аутентификация."
+    )
     @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "OK"),
-            @ApiResponse(responseCode = "401", description = "Unauthorized"),
-            @ApiResponse(responseCode = "403", description = "Forbidden"),
-            @ApiResponse(responseCode = "404", description = "Not found")
+            @ApiResponse(responseCode = "200"
+                    , description = "OK  - комментарий успешно удалён"
+            ),
+            @ApiResponse(responseCode = "401",
+                    description = "Unauthorized - требуется аутентификация",
+                    content = @Content(schema = @Schema(hidden = true))
+            ),
+            @ApiResponse(responseCode = "403",
+                    description = "Forbidden - недостаточно прав для удаления",
+                    content = @Content(schema = @Schema(hidden = true))
+            ),
+            @ApiResponse(responseCode = "404",
+                    description = "Not found - комментарий или объявление не найдены",
+                    content = @Content(schema = @Schema(hidden = true))
+            )
     })
     @DeleteMapping("/{adId}/comments/{commentId}")
     @ResponseStatus(HttpStatus.OK)
     public void deleteComment(@PathVariable("adId") Integer adId,
-                              @PathVariable("commentId") Integer commentId) {
-        log.info("Удаление комментария ID={} из объявления ID={}", commentId, adId);
+                              @PathVariable("commentId") Integer commentId,
+                              Authentication authentication) {
+        log.info("Удаление комментария ID={} из объявления ID={} пользователем: {}",
+                commentId, adId, authentication.getName());
+
+        commentService.deleteComment(adId, commentId, authentication);
+
+        log.info("Комментарий ID={} успешно удалён", commentId);
     }
 
     /**
      * Частичное обновление комментария (изменение текста) для указанного объявления.
-     * На данном этапе реализована заглушка: игнорирует новый текст комментария
-     * и возвращает пустой объект {@link Comment} без заполненных полей.
+     * <p>Проверка прав доступа:
+     * <ul>
+     *   <li>USER может обновлять только свои комментарии</li>
+     *   <li>ADMIN может обновлять любые комментарии</li>
+     *   <li>При попытке обновить чужой комментарий возвращается 403 Forbidden</li>
+     * </ul>
+     *
+     * <p>Особенности реализации:
+     * <ul>
+     *   <li>Использует {@link CommentService#updateComment(Integer, Integer,
+     *   Authentication, CreateOrUpdateComment)}</li>
+     *   <li>Проверка прав доступа выполняется на уровне сервиса</li>
+     *   <li>Обновляет только текст комментария, остальные поля остаются неизменными</li>
+     *   <li>Возвращает обновлённый комментарий</li>
+     * </ul>
      *
      * @param adId      идентификатор объявления
      * @param commentId идентификатор комментария
      * @param dto       DTO с обновлённым текстом комментария
-     * @return пустой {@link Comment}
+     * @param authentication объект аутентификации текущего пользователя
+     * @return обновлённый комментарий в формате {@link Comment}
      */
-    @Operation(summary = "Обновление комментария")
+    @Operation(
+            summary = "Обновление комментария",
+            description = "Обновляет текст существующего комментария. " +
+                    "USER может обновлять только свои комментарии. " +
+                    "ADMIN может обновлять любые комментарии. " +
+                    "Требуется аутентификация."
+    )
     @ApiResponses(value = {
             @ApiResponse(
                     responseCode = "200",
-                    description = "OK",
+                    description = "OK - комментарий успешно обновлён",
                     content = @Content(schema = @Schema(implementation = Comment.class))
             ),
-            @ApiResponse(responseCode = "401", description = "Unauthorized"),
-            @ApiResponse(responseCode = "403", description = "Forbidden"),
-            @ApiResponse(responseCode = "404", description = "Not found")
+            @ApiResponse(responseCode = "401",
+                    description = "Unauthorized  - требуется аутентификация ",
+                    content = @Content(schema = @Schema(hidden = true))
+            ),
+            @ApiResponse(responseCode = "403",
+                    description = "Forbidden - недостаточно прав для обновления",
+                    content = @Content(schema = @Schema(hidden = true))
+            ),
+            @ApiResponse(responseCode = "404",
+                    description = "Not found - комментарий или объявление не найдены",
+                    content = @Content(schema = @Schema(hidden = true))
+            )
     })
     @PatchMapping("/{adId}/comments/{commentId}")
     @ResponseStatus(HttpStatus.OK)
     public Comment updateComment(@PathVariable("adId") Integer adId,
                                  @PathVariable("commentId") Integer commentId,
-                                 @Valid @RequestBody CreateOrUpdateComment dto) {
-        log.info("Обновление комментария ID={} в объявлении ID={}", commentId, adId);
-        // Заглушка: создаем "обновленный" комментарий
-        Comment comment = new Comment();
-        comment.setAuthor(1);
-        comment.setAuthorImage("/images/users/1-avatar.jpg");
-        comment.setAuthorFirstName("Иван");
-        comment.setCreatedAt(System.currentTimeMillis());
-        comment.setPk(commentId);
-        comment.setText(dto.getText() != null ? dto.getText() : "Обновленный комментарий");
-        return comment;
+                                 @Valid @RequestBody CreateOrUpdateComment dto,
+                                 Authentication authentication) {
+        log.info("Обновление комментария ID={} в объявлении ID={} пользователем: {}",
+                commentId, adId, authentication.getName());
+
+        Comment updatedComment = commentService.updateComment(adId, commentId, authentication, dto);
+
+        log.info("Комментарий ID={} успешно обновлён", commentId);
+        return updatedComment;
     }
 }
