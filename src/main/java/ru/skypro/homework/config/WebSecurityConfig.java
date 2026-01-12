@@ -1,20 +1,26 @@
 package ru.skypro.homework.config;
 
+import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
+import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
+import org.springframework.security.config.annotation.method.configuration.EnableGlobalMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
-import org.springframework.security.core.userdetails.User;
-import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.security.provisioning.InMemoryUserDetailsManager;
+import org.springframework.security.provisioning.JdbcUserDetailsManager;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
-import ru.skypro.homework.enums.Role;
 
+import javax.sql.DataSource;
 import java.util.Arrays;
 import java.util.List;
 
@@ -26,13 +32,16 @@ import static org.springframework.security.config.Customizer.withDefaults;
  *
  * <p>Основные функции:
  * <ul>
- *   <li>Basic Authentication для REST API</li>
+ *   <li>Реализация JdbcUserDetailsManager + AuthenticationManager.</li>
  *   <li>CORS для фронтенда на порту 3000 (или кастомном)</li>
- *   <li>Разграничение доступа по ролям USER/ADMIN</li>
- *   <li>Тестовые пользователи в памяти</li>
+ *   <li><strong>Разделение доступа:</strong>
+ *       {@code GET /ads} - публичный. Остальные операции - с проверкой ролей</li>
  * </ul>
  */
 @Configuration
+@EnableWebSecurity
+@EnableGlobalMethodSecurity(prePostEnabled = true)
+@RequiredArgsConstructor
 public class WebSecurityConfig {
     /**
      * Порт фронтенда для CORS.
@@ -60,32 +69,57 @@ public class WebSecurityConfig {
     };
 
     /**
-     * Создаёт тестовых пользователей в памяти.
-     * Используется для тестирования на Этапе 1-2.
-     * На Этапе 3 будет заменён на UserDetailsService из БД.
+     * JdbcUserDetailsManager - служба управления пользователями.
+     * Реализует UserDetailsService для приложения.
+     * Загружает пользователей из БД.
+     *
+     * <p>Конфигурация:
+     * <ol>
+     * <li> Явно настраивается с DataSource через .dataSource(dataSource)</li>
+     * <li> Указывает SQL запросы для загрузки пользователей и authorities</li>
+     * <li> Использует схему БД, созданную миграциями Flyway</li>
+     * </ol>
+     *
+     * <p>SQL запросы:
+     * <ul>
+     * <li> usersByUsernameQuery: загружает username, password, enabled</li>
+     * <li> authoritiesByUsernameQuery: загружает username и authority (ROLE_*)</li>
+     *  </ul>
+     *
+     * @param dataSource DataSource для подключения к БД
+     * @return настроенный JdbcUserDetailsManager
      */
     @Bean
-    public InMemoryUserDetailsManager userDetailsService(PasswordEncoder passwordEncoder) {
-        UserDetails user =
-                User.builder()
-                        .username("user@gmail.com")
-                        .password("password")
-                        .passwordEncoder(passwordEncoder::encode)
-                        .roles(Role.USER.name())
-                        .build();
+    public JdbcUserDetailsManager userDetailsManager(DataSource dataSource) {
+        JdbcUserDetailsManager manager = new JdbcUserDetailsManager();
+        manager.setDataSource(dataSource);
 
-        UserDetails admin =
-                User.builder()
-                        .username("admin@gmail.com")
-                        .password("admin")
-                        .passwordEncoder(passwordEncoder::encode)
-                        .roles(Role.ADMIN.name())
-                        .build();
-        return new InMemoryUserDetailsManager(user,admin);
+        manager.setUsersByUsernameQuery(
+                "SELECT email AS username, password, enabled " +
+                        "FROM users " +
+                        "WHERE email = ?"
+        );
+
+        manager.setAuthoritiesByUsernameQuery(
+                "SELECT email AS username, 'ROLE_' || role AS authority " +
+                        "FROM users " +
+                        "WHERE email = ?"
+        );
+
+        return manager;
     }
+
 
     /**
      * Основная цепочка фильтров безопасности.
+     * <ol>
+     * <li> GET /ads доступен без аутентификации</li>
+     * <li> PUT, DELETE, POST требуют роли USER или ADMIN</li>
+     * </ol>
+     *
+     * @param http объект для настройки безопасности HTTP
+     * @return сконфигурированная цепочка фильтров
+     * @throws Exception если конфигурация не удалась
      */
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
@@ -98,9 +132,24 @@ public class WebSecurityConfig {
                                 authorization
                                         .mvcMatchers(AUTH_WHITELIST)
                                         .permitAll()
-                                        .mvcMatchers("/ads/**", "/users/**")
+
+                                        // GET /ads доступен всем
+                                        .mvcMatchers(HttpMethod.GET,"/ads")
+                                        .permitAll()
+
+                                        // Остальные запросы требуют аутентификации
+                                        .mvcMatchers("/ads/**", "/users/**", "/comments/**")
                                         .authenticated()
-                                        .mvcMatchers("/admin/**").hasRole(Role.ADMIN.name())
+
+                                        // Модифицирующие операции требуют роли USER или ADMIN
+                                        .mvcMatchers(HttpMethod.POST, "/ads/**", "/comments/**")
+                                        .hasAnyRole("USER", "ADMIN")
+                                        .mvcMatchers(HttpMethod.PUT, "/ads/**", "/comments/**")
+                                        .hasAnyRole("USER", "ADMIN")
+                                        .mvcMatchers(HttpMethod.PATCH, "/ads/**", "/comments/**", "/users/**")
+                                        .hasAnyRole("USER", "ADMIN")
+                                        .mvcMatchers(HttpMethod.DELETE, "/ads/**", "/comments/**")
+                                        .hasAnyRole("USER", "ADMIN")
                 )
                 .httpBasic(withDefaults());
         return http.build();
@@ -146,6 +195,47 @@ public class WebSecurityConfig {
     @Bean
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
+    }
+
+
+    /**
+     * AuthenticationManager для использования в сервисах.
+     *
+     * <p>Для чего нужен:
+     * <ol></ol>
+     * <li> AuthServiceImpl использует его для проверки паролей в методе login()</li>
+     * <li> Spring Security использует его для Basic Authentication</li>
+     * </ol>
+     *
+     * @param authConfig конфигурация аутентификации Spring Security
+     * @return сконфигурированный AuthenticationManager
+     * @throws Exception если конфигурация не удалась
+     */
+    @Bean
+    public AuthenticationManager authenticationManagerBean(
+            AuthenticationConfiguration authConfig) throws Exception {
+        return authConfig.getAuthenticationManager();
+    }
+
+    /**
+     * AuthenticationManager для использования в сервисах (альтернативная версия).
+     * Настраивается с JdbcUserDetailsManager и PasswordEncoder.
+     */
+    @Bean
+    public AuthenticationManager authenticationManager(
+            HttpSecurity http,
+            UserDetailsService userDetailsService,
+            PasswordEncoder passwordEncoder) throws Exception {
+
+        AuthenticationManagerBuilder authManagerBuilder =
+                http.getSharedObject(AuthenticationManagerBuilder.class);
+
+        // Настраиваем DaoAuthenticationProvider с JdbcUserDetailsManager
+        authManagerBuilder
+                .userDetailsService(userDetailsService)
+                .passwordEncoder(passwordEncoder);
+
+        return authManagerBuilder.build();
     }
 
 }
