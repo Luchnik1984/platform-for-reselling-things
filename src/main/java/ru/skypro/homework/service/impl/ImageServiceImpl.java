@@ -7,6 +7,7 @@ import org.springframework.util.StringUtils;
 import org.springframework.web.multipart.MultipartFile;
 import ru.skypro.homework.dto.user.User;
 import ru.skypro.homework.repository.AdRepository;
+import ru.skypro.homework.repository.ImageRepository;
 import ru.skypro.homework.repository.UserRepository;
 import ru.skypro.homework.service.ImageService;
 
@@ -37,8 +38,7 @@ import static org.flywaydb.core.internal.util.StringUtils.getFileExtension;
 @RequiredArgsConstructor
 public class ImageServiceImpl implements ImageService {
 
-    private final UserRepository userRepository;
-    private final AdRepository adRepository;
+    private final ImageRepository imageRepository;
 
     // Конфигурация путей
     private static final String UPLOAD_DIR = "uploads";
