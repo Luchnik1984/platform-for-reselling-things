@@ -1,6 +1,7 @@
 package ru.skypro.homework.service;
 
 import org.springframework.web.multipart.MultipartFile;
+import ru.skypro.homework.entity.ImageEntity;
 
 /**
  * Сервис для управления изображениями в приложении.
@@ -22,9 +23,9 @@ public interface ImageService {
      * @param imageUploadPath путь, куда сохранять файл
      * @param width           ширина изображения
      * @param height          высота изображения
-     * @return относительный путь к сохранённому файлу (например, ".images/ads_123.jpg")
+     * @return ImageEntity для записи его в базу данных
      */
-    String uploadImage(MultipartFile image, String imageUploadPath, int width, int height);
+    ImageEntity uploadImage(MultipartFile image, String imageUploadPath, int width, int height);
 
 
     /**

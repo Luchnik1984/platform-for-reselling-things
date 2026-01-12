@@ -6,12 +6,14 @@ import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 import org.springframework.web.multipart.MultipartFile;
 import ru.skypro.homework.dto.user.User;
+import ru.skypro.homework.entity.ImageEntity;
 import ru.skypro.homework.repository.AdRepository;
 import ru.skypro.homework.repository.ImageRepository;
 import ru.skypro.homework.repository.UserRepository;
 import ru.skypro.homework.service.ImageService;
 
 import javax.imageio.ImageIO;
+import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.io.*;
 import java.nio.file.Files;
@@ -71,35 +73,95 @@ public class ImageServiceImpl implements ImageService {
      * @return относительный путь к сохранённому файлу (например, ".images/ads_123.jpg")
      */
     @Override
-    public String uploadImage(MultipartFile image, String imageUploadPath, int width, int height) {
+    public ImageEntity uploadImage(MultipartFile image, String imageUploadPath, int width, int height) {
+        // Проверяем, что файл не пустой
+        if (image == null || image.isEmpty()) {
+            throw new IllegalArgumentException("Файл изображения не может быть пустым");
+        }
+
+        // Создаем директорию, если она не существует
         try {
-            // Создаем директорию, если её нет
-            Path uploadPath = Paths.get(imageUploadPath);
-            if (!Files.exists(uploadPath)) {
-                Files.createDirectories(uploadPath);
+            Path uploadDir = Paths.get(imageUploadPath);
+            if (!Files.exists(uploadDir)) {
+                Files.createDirectories(uploadDir);
+            }
+        } catch (IOException e) {
+            throw new RuntimeException("Не удалось создать директорию для загрузки: " + imageUploadPath, e);
+        }
+
+        // Генерируем уникальное имя файла
+        String originalFilename = StringUtils.cleanPath(image.getOriginalFilename());
+        String fileExtension = getFileExtension(originalFilename);
+        String uniqueFileName = UUID.randomUUID() + fileExtension;
+
+        // Формируем полный путь для сохранения файла
+        Path filePath = Paths.get(imageUploadPath, uniqueFileName);
+
+        try {
+            // Обрабатываем изображение: изменяем размер
+            BufferedImage bufferedImage = ImageIO.read(image.getInputStream());
+
+            // Проверяем, что файл является изображением
+            if (bufferedImage == null) {
+                throw new IllegalArgumentException("Загруженный файл не является изображением");
             }
 
-            // Генерируем уникальное имя файла
-            String originalFilename = StringUtils.cleanPath(image.getOriginalFilename());
-            String fileExtension = getFileExtension(originalFilename);
-            String uniqueFilename = UUID.randomUUID() + fileExtension;
+            // Изменяем размер изображения
+            BufferedImage resizedImage = resizeImage(bufferedImage, width, height);
 
-            // Сохраняем файл
-            Path filePath = uploadPath.resolve(uniqueFilename);
-            Files.copy(image.getInputStream(), filePath, StandardCopyOption.REPLACE_EXISTING);
+            // Сохраняем изображение в файловую систему
+            String formatName = getFormatName(fileExtension);
+            ImageIO.write(resizedImage, formatName, filePath.toFile());
 
-            // Изменение размера
-            resizeImage(filePath.toString(), width, height);
+            // Получаем размер файла
+            long fileSize = Files.size(filePath);
 
-            String imagePath = "/" + imageUploadPath + "/" + uniqueFilename;
-            log.info("Изображение сохранено: {}", imagePath);
-            return imagePath;
+            // Получаем MIME-тип
+            String mediaType = image.getContentType();
+            if (mediaType == null || mediaType.isEmpty()) {
+                mediaType = determineMediaType(fileExtension);
+            }
+
+            // Формируем относительный путь для хранения в БД
+            String relativePath = Paths.get(imageUploadPath).relativize(filePath).toString();
+
+            // Создаем и возвращаем сущность изображения
+            return new ImageEntity(relativePath, fileSize, mediaType);
 
         } catch (IOException e) {
-            log.error("Ошибка при сохранении изображения", e);
-            throw new RuntimeException("Не удалось сохранить изображение", e);
+            throw new RuntimeException("Не удалось сохранить изображение: " + e.getMessage(), e);
         }
     }
+//    @Override
+//    public String uploadImage(MultipartFile image, String imageUploadPath, int width, int height) {
+//        try {
+//            // Создаем директорию, если её нет
+//            Path uploadPath = Paths.get(imageUploadPath);
+//            if (!Files.exists(uploadPath)) {
+//                Files.createDirectories(uploadPath);
+//            }
+//
+//            // Генерируем уникальное имя файла
+//            String originalFilename = StringUtils.cleanPath(image.getOriginalFilename());
+//            String fileExtension = getFileExtension(originalFilename);
+//            String uniqueFilename = UUID.randomUUID() + fileExtension;
+//
+//            // Сохраняем файл
+//            Path filePath = uploadPath.resolve(uniqueFilename);
+//            Files.copy(image.getInputStream(), filePath, StandardCopyOption.REPLACE_EXISTING);
+//
+//            // Изменение размера
+//            resizeImage(filePath.toString(), width, height);
+//
+//            String imagePath = "/" + imageUploadPath + "/" + uniqueFilename;
+//            log.info("Изображение сохранено: {}", imagePath);
+//            return imagePath;
+//
+//        } catch (IOException e) {
+//            log.error("Ошибка при сохранении изображения", e);
+//            throw new RuntimeException("Не удалось сохранить изображение", e);
+//        }
+//    }
 
     /**
      * Получает сохранённое изображение по относительному пути к файлу.
@@ -167,38 +229,74 @@ public class ImageServiceImpl implements ImageService {
      * Если изображение меньше целевых размеров - изменения не производит.
      * Перезаписывает исходный файл.
      *
-     * @param filePath     путь к файлу изображения
+     * @param originalImage     буферизованный файл
      * @param targetWidth  максимальная ширина
      * @param targetHeight максимальная высота
      */
-    private void resizeImage(String filePath, int targetWidth, int targetHeight) {
-        try {
-            File inputFile = new File(filePath);
-            BufferedImage originalImage = ImageIO.read(inputFile);
+    private BufferedImage resizeImage(BufferedImage originalImage, int targetWidth, int targetHeight) {
+        // Определяем тип изображения (для поддержки прозрачности PNG)
+        int type = originalImage.getTransparency() == Transparency.OPAQUE ?
+                BufferedImage.TYPE_INT_RGB : BufferedImage.TYPE_INT_ARGB;
 
-            if (originalImage == null) {
-                return;
-            }
+        BufferedImage resizedImage = new BufferedImage(targetWidth, targetHeight, type);
+        Graphics2D g = resizedImage.createGraphics();
 
-            // Проверяем, нужно ли изменять размер
-            if (originalImage.getWidth() <= targetWidth && originalImage.getHeight() <= targetHeight) {
-                return;
-            }
+        // Настройка качества рендеринга
+        g.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BILINEAR);
+        g.setRenderingHint(RenderingHints.KEY_RENDERING, RenderingHints.VALUE_RENDER_QUALITY);
+        g.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
 
-            // Создаем изображение с новым размером
-            BufferedImage resizedImage = new BufferedImage(targetWidth, targetHeight, originalImage.getType());
-            java.awt.Graphics2D g = resizedImage.createGraphics();
-            g.drawImage(originalImage, 0, 0, targetWidth, targetHeight, null);
-            g.dispose();
+        // Вычисляем масштабирование с сохранением пропорций
+        double originalWidth = originalImage.getWidth();
+        double originalHeight = originalImage.getHeight();
 
-            // Сохраняем с тем же форматом
-            String formatName = getFileExtension(inputFile.getName()).substring(1);
-            ImageIO.write(resizedImage, formatName, inputFile);
+        double scaleX = targetWidth / originalWidth;
+        double scaleY = targetHeight / originalHeight;
+        double scale = Math.min(scaleX, scaleY);
 
-            log.debug("Изображение {} изменено до {}x{}", filePath, targetWidth, targetHeight);
+        int scaledWidth = (int) (originalWidth * scale);
+        int scaledHeight = (int) (originalHeight * scale);
 
-        } catch (IOException e) {
-            log.warn("Не удалось изменить размер изображения: {}", filePath, e);
+        // Вычисляем координаты для центрирования
+        int x = (targetWidth - scaledWidth) / 2;
+        int y = (targetHeight - scaledHeight) / 2;
+
+        // Если изображение не имеет прозрачности, заливаем фон
+        if (originalImage.getTransparency() == Transparency.OPAQUE) {
+            g.setColor(Color.WHITE);
+            g.fillRect(0, 0, targetWidth, targetHeight);
         }
+
+        // Рисуем масштабированное изображение
+        g.drawImage(originalImage, x, y, scaledWidth, scaledHeight, null);
+        g.dispose();
+
+        return resizedImage;
+    }
+    /**
+     * Определяет формат для ImageIO на основе расширения файла.
+     */
+    private String getFormatName(String extension) {
+        return switch (extension.toLowerCase()) {
+            case "jpg", "jpeg" -> "jpeg";
+            case "png" -> "png";
+            case "gif" -> "gif";
+            case "bmp" -> "bmp";
+            default -> "jpeg"; // По умолчанию
+        };
+    }
+
+    /**
+     * Определяет MIME-тип на основе расширения файла.
+     */
+    private String determineMediaType(String extension) {
+        return switch (extension.toLowerCase()) {
+            case "jpg", "jpeg" -> "image/jpeg";
+            case "png" -> "image/png";
+            case "gif" -> "image/gif";
+            case "bmp" -> "image/bmp";
+            case "webp" -> "image/webp";
+            default -> "application/octet-stream";
+        };
     }
 }
