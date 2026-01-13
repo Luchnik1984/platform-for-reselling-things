@@ -6,14 +6,18 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.server.ResponseStatusException;
 import ru.skypro.homework.dto.user.NewPassword;
 import ru.skypro.homework.dto.user.UpdateUser;
 import ru.skypro.homework.dto.user.User;
+import ru.skypro.homework.entity.ImageEntity;
 import ru.skypro.homework.entity.UserEntity;
 import ru.skypro.homework.exceptions.InvalidPasswordException;
+import ru.skypro.homework.exceptions.UserNotFoundException;
 import ru.skypro.homework.mapper.UserMapper;
 import ru.skypro.homework.repository.UserRepository;
+import ru.skypro.homework.service.ImageService;
 import ru.skypro.homework.service.UserService;
 import ru.skypro.homework.util.SecurityUtils;
 
@@ -32,12 +36,14 @@ import ru.skypro.homework.util.SecurityUtils;
  */
 @Slf4j
 @Service
+@Transactional
 @RequiredArgsConstructor
 public class UserServiceImpl implements UserService {
 
     private final UserRepository userRepository;
     private final UserMapper userMapper;
     private final PasswordEncoder passwordEncoder;
+    private final ImageService imageService;
 
     /**
      * {@inheritDoc}
@@ -143,6 +149,13 @@ public class UserServiceImpl implements UserService {
         userRepository.save(userEntity);
 
         log.info("Пароль для пользователя {} успешно изменен", email);
+    }
+
+
+    @Override
+    @Transactional
+    public void updateUserImage(UserEntity user, MultipartFile image) {
+       imageService.uploadUserImage(user.getId(),image);
     }
 
 }

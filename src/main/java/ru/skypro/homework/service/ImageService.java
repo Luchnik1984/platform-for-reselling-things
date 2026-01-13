@@ -42,9 +42,9 @@ public interface ImageService {
      *
      * @param userId идентификатор пользователя
      * @param image  файл изображения аватара
-     * @return относительный путь к сохранённому аватару (например, "/avatars/user_123.jpg")
+     * @return Измененный user
      */
-    String uploadUserImage(Integer userId, MultipartFile image);
+    void uploadUserImage(Integer userId, MultipartFile image);
 
     /**
      * Сохраняет изображение для конкретного объявления.

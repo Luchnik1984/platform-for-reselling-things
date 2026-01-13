@@ -3,10 +3,13 @@ package ru.skypro.homework.service.impl;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 import org.springframework.web.multipart.MultipartFile;
 import ru.skypro.homework.dto.user.User;
 import ru.skypro.homework.entity.ImageEntity;
+import ru.skypro.homework.entity.UserEntity;
+import ru.skypro.homework.exceptions.UserNotFoundException;
 import ru.skypro.homework.repository.AdRepository;
 import ru.skypro.homework.repository.ImageRepository;
 import ru.skypro.homework.repository.UserRepository;
@@ -38,14 +41,17 @@ import static org.flywaydb.core.internal.util.StringUtils.getFileExtension;
 @Slf4j
 @Service
 @RequiredArgsConstructor
+@Transactional
 public class ImageServiceImpl implements ImageService {
 
     private final ImageRepository imageRepository;
+    private final UserRepository userRepository;
 
     // Конфигурация путей
     private static final String UPLOAD_DIR = "uploads";
-    private static final String AVATARS_DIR = UPLOAD_DIR + "/avatars";
-    private static final String ADS_DIR = UPLOAD_DIR + "/ads";
+    private static final String AVATARS_DIR = Paths.get(UPLOAD_DIR, "avatars").toString();
+    private static final String ADS_DIR = Paths.get(UPLOAD_DIR, "ads").toString();
+
 
     // Допустимые форматы изображений
     private static final String[] ALLOWED_CONTENT_TYPES = {
@@ -58,8 +64,8 @@ public class ImageServiceImpl implements ImageService {
     //Размеры изображения сохраняемые на локальном носителе
     private static final int ADS_WIDTH = 800;
     private static final int ADS_HEIGHT = 800;
-    private static final int AVATAR_WIDTH = 100;
-    private static final int AVATAR_HEIGHT = 100;
+    private static final int AVATAR_WIDTH = 200;
+    private static final int AVATAR_HEIGHT = 200;
 
 
     /**
@@ -92,7 +98,7 @@ public class ImageServiceImpl implements ImageService {
         // Генерируем уникальное имя файла
         String originalFilename = StringUtils.cleanPath(image.getOriginalFilename());
         String fileExtension = getFileExtension(originalFilename);
-        String uniqueFileName = UUID.randomUUID() + fileExtension;
+        String uniqueFileName = UUID.randomUUID() + "." + fileExtension;
 
         // Формируем полный путь для сохранения файла
         Path filePath = Paths.get(imageUploadPath, uniqueFileName);
@@ -123,7 +129,7 @@ public class ImageServiceImpl implements ImageService {
             }
 
             // Формируем относительный путь для хранения в БД
-            String relativePath = Paths.get(imageUploadPath).relativize(filePath).toString();
+            String relativePath = Paths.get("").relativize(filePath).toString();
 
             // Создаем и возвращаем сущность изображения
             return new ImageEntity(relativePath, fileSize, mediaType);
@@ -132,36 +138,7 @@ public class ImageServiceImpl implements ImageService {
             throw new RuntimeException("Не удалось сохранить изображение: " + e.getMessage(), e);
         }
     }
-//    @Override
-//    public String uploadImage(MultipartFile image, String imageUploadPath, int width, int height) {
-//        try {
-//            // Создаем директорию, если её нет
-//            Path uploadPath = Paths.get(imageUploadPath);
-//            if (!Files.exists(uploadPath)) {
-//                Files.createDirectories(uploadPath);
-//            }
-//
-//            // Генерируем уникальное имя файла
-//            String originalFilename = StringUtils.cleanPath(image.getOriginalFilename());
-//            String fileExtension = getFileExtension(originalFilename);
-//            String uniqueFilename = UUID.randomUUID() + fileExtension;
-//
-//            // Сохраняем файл
-//            Path filePath = uploadPath.resolve(uniqueFilename);
-//            Files.copy(image.getInputStream(), filePath, StandardCopyOption.REPLACE_EXISTING);
-//
-//            // Изменение размера
-//            resizeImage(filePath.toString(), width, height);
-//
-//            String imagePath = "/" + imageUploadPath + "/" + uniqueFilename;
-//            log.info("Изображение сохранено: {}", imagePath);
-//            return imagePath;
-//
-//        } catch (IOException e) {
-//            log.error("Ошибка при сохранении изображения", e);
-//            throw new RuntimeException("Не удалось сохранить изображение", e);
-//        }
-//    }
+
 
     /**
      * Получает сохранённое изображение по относительному пути к файлу.
@@ -202,13 +179,25 @@ public class ImageServiceImpl implements ImageService {
      * Сохраняет аватар (изображение профиля) для конкретного пользователя.
      * Автоматически удаляет предыдущий аватар пользователя, если он существует.
      *
-     * @param userId идентификатор пользователя
-     * @param image  файл изображения аватара
-     * @return относительный путь к сохранённому аватару (например, "/avatars/user_123.jpg")
+     * @param userId
+     * @param image файл изображения аватара
      */
     @Override
-    public String uploadUserImage(Integer userId, MultipartFile image) {
-        return "";
+    @Transactional
+    public void uploadUserImage(Integer userId, MultipartFile image) {
+
+        //Обновление и удаление старого файла
+        UserEntity user = userRepository.findById(userId)
+                .orElseThrow(() -> new UserNotFoundException(userId));
+                ImageEntity imageEntity = user.getImage();
+        if (imageEntity != null) {
+            String filePath = imageEntity.getFilePath();
+            deleteFile(filePath);
+        }
+
+        user.setImage(imageRepository.save(uploadImage(image, AVATARS_DIR, AVATAR_WIDTH, AVATAR_HEIGHT)));
+        userRepository.save(user);
+
     }
 
     /**
@@ -229,9 +218,9 @@ public class ImageServiceImpl implements ImageService {
      * Если изображение меньше целевых размеров - изменения не производит.
      * Перезаписывает исходный файл.
      *
-     * @param originalImage     буферизованный файл
-     * @param targetWidth  максимальная ширина
-     * @param targetHeight максимальная высота
+     * @param originalImage буферизованный файл
+     * @param targetWidth   максимальная ширина
+     * @param targetHeight  максимальная высота
      */
     private BufferedImage resizeImage(BufferedImage originalImage, int targetWidth, int targetHeight) {
         // Определяем тип изображения (для поддержки прозрачности PNG)
@@ -273,6 +262,7 @@ public class ImageServiceImpl implements ImageService {
 
         return resizedImage;
     }
+
     /**
      * Определяет формат для ImageIO на основе расширения файла.
      */
@@ -298,5 +288,36 @@ public class ImageServiceImpl implements ImageService {
             case "webp" -> "image/webp";
             default -> "application/octet-stream";
         };
+    }
+
+    /**
+     * Удаляет файл по указанному пути с поддержкой относительных путей
+     *
+     * @param relativeFilePath относительный путь к файлу (например, "/uploads/avatar.jpg")
+     * @return true - если файл успешно удалён, false - в случае ошибки
+     */
+    public boolean deleteFile(String relativeFilePath) {
+        if (relativeFilePath == null || relativeFilePath.trim().isEmpty()) {
+            return false;
+        }
+
+        try {
+            // Получаем абсолютный путь (базовая директория задаётся в конфигурации)
+            Path filePath = Paths.get(relativeFilePath).toAbsolutePath();
+
+            File file = filePath.toFile();
+
+            // Проверяем, существует ли файл и является ли он файлом (а не директорией)
+            if (file.exists() && file.isFile()) {
+                return file.delete();
+            } else {
+                System.out.println("Файл не существует или является директорией: " + filePath);
+                return false;
+            }
+        } catch (Exception e) {
+            System.err.println("Ошибка при удалении файла: " + relativeFilePath);
+            e.printStackTrace();
+            return false;
+        }
     }
 }

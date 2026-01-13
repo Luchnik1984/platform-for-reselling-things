@@ -22,34 +22,5 @@ import java.util.Optional;
 @Repository
 public interface ImageRepository extends JpaRepository<ImageEntity, Integer> {
 
-    /**
-     * Находит изображение пользователя (аватар).
-     *
-     * @param userId идентификатор пользователя
-     * @return Optional с изображением, если найдено
-     */
-    Optional<ImageEntity> findByUserId(Integer userId);
-
-    /**
-     * Находит изображение объявления.
-     *
-     * @param adId идентификатор объявления
-     * @return Optional с изображением, если найдено
-     */
-    Optional<ImageEntity> findByAdId(Integer adId);
-
-    /**
-     * Удаляет аватар пользователя.
-     *
-     * @param userId идентификатор пользователя
-     */
-    void deleteByUserId(Integer userId);
-
-    /**
-     * Удаляет изображение объявления.
-     *
-     * @param adId идентификатор объявления
-     */
-    void deleteByAdId(Integer adId);
 }
 

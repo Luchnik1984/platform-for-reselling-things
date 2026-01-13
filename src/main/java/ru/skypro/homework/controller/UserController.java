@@ -10,11 +10,16 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import ru.skypro.homework.dto.user.NewPassword;
 import ru.skypro.homework.dto.user.UpdateUser;
 import ru.skypro.homework.dto.user.User;
+import ru.skypro.homework.entity.UserEntity;
+import ru.skypro.homework.repository.ImageRepository;
+import ru.skypro.homework.repository.UserRepository;
+import ru.skypro.homework.service.ImageService;
 import ru.skypro.homework.service.UserService;
 import org.springframework.security.core.Authentication;
 
@@ -38,6 +43,8 @@ import javax.validation.Valid;
 public class UserController {
 
     private final UserService userService;
+    private final UserRepository userRepository;
+    private final ImageService imageService;
 
     /**
      * Обновление пароля авторизованного пользователя
@@ -180,9 +187,9 @@ public class UserController {
                 image.getSize(),
                 image.getContentType());
 
-        /* TODO: Реализовать после ImageService:
-         UserEntity user = userRepository.findByEmail(authentication.getName());
-         imageService.uploadUserImage(user, image);*/
+
+         UserEntity user = userRepository.findByEmail(authentication.getName()).orElse(null);
+         imageService.uploadUserImage(user.getId(), image);
 
         log.info("Аватар пользователя {} успешно обновлен (заглушка)", authentication.getName());
 
