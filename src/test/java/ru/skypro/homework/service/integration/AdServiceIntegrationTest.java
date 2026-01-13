@@ -128,6 +128,12 @@ class AdServiceIntegrationTest extends AbstractIntegrationTest {
      */
     private Integer savedAdId;
 
+    private Authentication user1Auth;
+
+    private Authentication adminAuth;
+
+    private Authentication user2Auth;
+
     /**
      * Подготовка тестовых данных перед каждым тестом.
      * <p>
@@ -192,6 +198,10 @@ class AdServiceIntegrationTest extends AbstractIntegrationTest {
         adRepository.save(ad2);
         AdEntity savedAd3 = adRepository.save(ad3);
         savedAdId = savedAd3.getId();
+
+        Authentication user1Auth = TestAuthenticationUtils.createAuthentication(user1);
+        Authentication user2Auth = TestAuthenticationUtils.createAuthentication(user2);
+        Authentication adminUserAuth = TestAuthenticationUtils.createAuthentication(adminUser);
     }
 
     /**
@@ -253,7 +263,7 @@ class AdServiceIntegrationTest extends AbstractIntegrationTest {
     @DisplayName("Получение объявлений текущего пользователя (фильтрация по автору)")
     void getUserAds_shouldReturnOnlyUserAds_whenUserHasAds() {
         // Создаём аутентификацию для user1 (у него 2 объявления)
-        Authentication authentication = createAuthenticationForUser(user1);
+        Authentication authentication = TestAuthenticationUtils.createAuthentication(user1);
 
         // Получаем объявления только для user1
         Ads result = adService.getUserAds(authentication);
@@ -364,7 +374,7 @@ class AdServiceIntegrationTest extends AbstractIntegrationTest {
     void getUserAds_shouldReturnEmptyList_whenUserHasNoAds() {
         // Создаём нового пользователя без объявлений
         UserEntity userWithoutAds = createTestUser("no.ads@example.com", "Нет", "Объявлений", Role.USER);
-        Authentication authentication = createAuthenticationForUser(userWithoutAds);
+        Authentication authentication = TestAuthenticationUtils.createAuthentication(userWithoutAds);
 
         // Получаем объявления пользователя без объявлений
         Ads result = adService.getUserAds(authentication);
@@ -392,7 +402,7 @@ class AdServiceIntegrationTest extends AbstractIntegrationTest {
     @DisplayName("Исключение при попытке удалить чужое объявление")
     void deleteAd_shouldThrowAccessDeniedException_whenUserTriesToDeleteOthersAd() {
         //  User2 пытается удалить объявление user1
-        Authentication authentication = createAuthenticationForUser(user2);
+        Authentication authentication = TestAuthenticationUtils.createAuthentication(user2);
         Integer adIdToDelete = adRepository.findAllByAuthorId(user1.getId()).get(0).getId();
         int initialAdCount = adRepository.findAll().size();
 
@@ -423,7 +433,7 @@ class AdServiceIntegrationTest extends AbstractIntegrationTest {
     @DisplayName("Успешное удаление своего объявления")
     void deleteAd_shouldDeleteAd_whenUserIsAuthor() {
         // User1 удаляет свое объявление
-        Authentication authentication = createAuthenticationForUser(user1);
+        Authentication authentication = TestAuthenticationUtils.createAuthentication(user1);
         Integer adIdToDelete = adRepository.findAllByAuthorId(user1.getId()).get(0).getId();
         int initialAdCount = adRepository.findAll().size();
 
@@ -452,7 +462,7 @@ class AdServiceIntegrationTest extends AbstractIntegrationTest {
     @DisplayName("Успешное удаление любого объявления администратором")
     void deleteAd_shouldDeleteAnyAd_whenUserIsAdmin() {
         // ADMIN удаляет объявление user1
-        Authentication authentication = createAuthenticationForUser(adminUser);
+        Authentication authentication = TestAuthenticationUtils.createAuthentication(adminUser);
         Integer adIdToDelete = adRepository.findAllByAuthorId(user1.getId()).get(0).getId();
         int initialAdCount = adRepository.findAll().size();
 
@@ -481,7 +491,7 @@ class AdServiceIntegrationTest extends AbstractIntegrationTest {
     @DisplayName("Успешное обновление своего объявления")
     void updateAd_shouldUpdateAd_whenUserIsAuthor() {
         // User1 обновляет свое объявление
-        Authentication authentication = createAuthenticationForUser(user1);
+        Authentication authentication = TestAuthenticationUtils.createAuthentication(user1);
         Integer adIdToUpdate = adRepository.findAllByAuthorId(user1.getId()).get(0).getId();
 
         CreateOrUpdateAd updateData = new CreateOrUpdateAd();

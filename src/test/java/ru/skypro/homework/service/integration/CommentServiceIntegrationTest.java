@@ -135,9 +135,9 @@ class CommentServiceIntegrationTest extends AbstractIntegrationTest {
         testAd = adRepository.save(testAd);
 
         // Создание объектов Authentication для тестов
-        userAuth = createAuthentication("user@example.com", Role.USER);
-        adminAuth = createAuthentication("admin@example.com", Role.ADMIN);
-        anotherUserAuth = createAuthentication("another@example.com", Role.USER);
+        userAuth = TestAuthenticationUtils.createAuthentication("user@example.com", Role.USER);
+        adminAuth = TestAuthenticationUtils.createAuthentication("admin@example.com", Role.ADMIN);
+        anotherUserAuth = TestAuthenticationUtils.createAuthentication("another@example.com", Role.USER);
 
         // Создание нескольких тестовых комментариев
         createTestComments();
