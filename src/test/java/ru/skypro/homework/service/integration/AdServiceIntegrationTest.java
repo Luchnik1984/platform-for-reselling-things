@@ -27,6 +27,7 @@ import ru.skypro.homework.service.unit.AdServiceImpl;
 import ru.skypro.homework.util.SecurityUtils;
 
 
+import java.util.Collections;
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -149,9 +150,20 @@ class AdServiceIntegrationTest extends AbstractIntegrationTest {
         userRepository.deleteAll();
 
         // Создаём тестовых пользователей с хешированными паролями
-        user1 = createTestUser("user1@example.com", "Иван", "Иванов", Role.USER);
-        user2 = createTestUser("user2@example.com", "Петр", "Петров", Role.USER);
-        adminUser = createTestUser("admin@example.com", "Админ", "Админов", Role.ADMIN);
+        user1 = createTestUser(
+                "user1@example.com",
+                "Иван",
+                "Иванов",
+                Role.USER);
+        user2 = createTestUser(
+                "user2@example.com",
+                "Петр",
+                "Петров",
+                Role.USER);
+        adminUser = createTestUser(
+                "admin@example.com",
+                "Админ",
+                "Админов", Role.ADMIN);
 
         // Создаём тестовые объявления
         AdEntity ad1 = new AdEntity(
@@ -528,9 +540,24 @@ class AdServiceIntegrationTest extends AbstractIntegrationTest {
      * @return объект {@link Authentication} с установленными principal и authorities
      */
     private Authentication createAuthenticationForUser(UserEntity userEntity) {
+        List<SimpleGrantedAuthority> authorities;
+
+        if (userEntity.getRole() == Role.ADMIN) {
+            // ADMIN должен иметь ОБЕ роли
+            authorities = List.of(
+                    new SimpleGrantedAuthority("ROLE_ADMIN"),
+                    new SimpleGrantedAuthority("ROLE_USER")
+            );
+        } else {
+            authorities = Collections.singletonList(
+                    new SimpleGrantedAuthority("ROLE_USER")
+            );
+        }
+
         return new UsernamePasswordAuthenticationToken(
                 userEntity.getEmail(),
-                List.of(new SimpleGrantedAuthority("ROLE_" + userEntity.getRole().name()))
+                "password",
+                authorities
         );
     }
 }
