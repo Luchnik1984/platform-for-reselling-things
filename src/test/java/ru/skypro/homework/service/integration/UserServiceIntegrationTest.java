@@ -159,13 +159,13 @@ class UserServiceIntegrationTest extends AbstractIntegrationTest {
     @Test
     @DisplayName("Успешное получение профиля текущего пользователя")
     void getCurrentUser_shouldReturnUserDto_whenUserAuthenticated() {
-        // Arrange: Создаём объект аутентификации для тестового пользователя
+        // Создаём объект аутентификации для тестового пользователя
         Authentication authentication = createAuthenticationForUser(testUser, "password123");
 
-        // Act: Вызываем тестируемый метод сервиса
+        // Вызываем тестируемый метод сервиса
         User result = userService.getCurrentUser(authentication);
 
-        // Assert: Проверяем корректность результата
+        // Проверяем корректность результата
         assertNotNull(result, "Результат не должен быть null");
         assertEquals(savedUserId, result.getId(), "ID пользователя должен совпадать");
         assertEquals(testUser.getEmail(), result.getEmail(), "Email должен совпадать");
@@ -195,7 +195,7 @@ class UserServiceIntegrationTest extends AbstractIntegrationTest {
     @Test
     @DisplayName("Частичное обновление профиля пользователя")
     void updateUser_shouldUpdateOnlyProvidedFields_whenPartialUpdate() {
-        // Arrange: Создаём аутентификацию и DTO для обновления
+        // Создаём аутентификацию и DTO для обновления
         Authentication authentication = createAuthenticationForUser(testUser, "password123");
 
         UpdateUser updateUser = new UpdateUser();
@@ -203,15 +203,15 @@ class UserServiceIntegrationTest extends AbstractIntegrationTest {
         updateUser.setLastName(null); // Фамилия не обновляется
         updateUser.setPhone(null); // Телефон не обновляется
 
-        // Act: Вызываем метод обновления профиля
+        // Вызываем метод обновления профиля
         UpdateUser result = userService.updateUser(authentication, updateUser);
 
-        // Assert: Проверяем возвращаемый DTO
+        // Проверяем возвращаемый DTO
         assertEquals("Алексей", result.getFirstName(), "Имя должно быть обновлено в DTO");
         assertNull(result.getLastName(), "Фамилия должна быть null в DTO");
         assertNull(result.getPhone(), "Телефон должен быть null в DTO");
 
-        // Assert: Проверяем фактическое состояние в БД
+        // Проверяем фактическое состояние в БД
         UserEntity updatedUser = userRepository.findById(savedUserId)
                 .orElseThrow(() -> new AssertionError("Пользователь должен существовать в БД"));
 
@@ -240,7 +240,7 @@ class UserServiceIntegrationTest extends AbstractIntegrationTest {
     @Test
     @DisplayName("Успешная смена пароля при верном текущем пароле")
     void updatePassword_shouldUpdatePassword_whenCurrentPasswordIsCorrect() {
-        // Arrange: Создаём аутентификацию и DTO смены пароля
+        // Создаём аутентификацию и DTO смены пароля
         Authentication authentication = createAuthenticationForUser(testUser, "password123");
 
         NewPassword newPassword = new NewPassword();
@@ -250,21 +250,21 @@ class UserServiceIntegrationTest extends AbstractIntegrationTest {
         // Сохраняем старый хеш для последующего сравнения
         String oldPasswordHash = testUser.getPassword();
 
-        // Act: Вызываем метод смены пароля
+        // Вызываем метод смены пароля
         userService.updatePassword(authentication, newPassword);
 
-        // Assert: Проверяем, что пароль изменился в БД
+        // Проверяем, что пароль изменился в БД
         UserEntity updatedUser = userRepository.findById(savedUserId)
                 .orElseThrow(() -> new AssertionError("Пользователь должен существовать в БД"));
 
         assertNotEquals(oldPasswordHash, updatedUser.getPassword(),
                 "Хеш пароля должен измениться после обновления");
 
-        // Assert: Проверяем, что новый пароль корректно хеширован и работает
+        // Проверяем, что новый пароль корректно хеширован и работает
         assertTrue(passwordEncoder.matches("newSecurePassword456", updatedUser.getPassword()),
                 "Новый пароль должен проходить проверку через PasswordEncoder");
 
-        // Assert: Проверяем, что старый пароль больше не работает
+        // Проверяем, что старый пароль больше не работает
         assertFalse(passwordEncoder.matches("password123", updatedUser.getPassword()),
                 "Старый пароль не должен проходить проверку после смены");
     }
@@ -286,7 +286,7 @@ class UserServiceIntegrationTest extends AbstractIntegrationTest {
     @Test
     @DisplayName("Исключение при смене пароля с неверным текущим паролем")
     void updatePassword_shouldThrowInvalidPasswordException_whenCurrentPasswordIsWrong() {
-        // Arrange: Создаём аутентификацию и DTO с неверным текущим паролем
+        // Создаём аутентификацию и DTO с неверным текущим паролем
         Authentication authentication = createAuthenticationForUser(testUser, "password123");
 
         NewPassword newPassword = new NewPassword();
@@ -296,10 +296,10 @@ class UserServiceIntegrationTest extends AbstractIntegrationTest {
         // Сохраняем исходный хеш пароля для проверки неизменности
         String originalPasswordHash = testUser.getPassword();
 
-        // Act & Assert: Проверяем, что исключение выбрасывается
+        // Проверяем, что исключение выбрасывается
         assertThrows(InvalidPasswordException.class, () -> userService.updatePassword(authentication, newPassword), "Должно быть выброшено InvalidPasswordException при неверном текущем пароле");
 
-        // Assert: Проверяем, что пароль в БД не изменился
+        // Проверяем, что пароль в БД не изменился
         UserEntity unchangedUser = userRepository.findById(savedUserId)
                 .orElseThrow(() -> new AssertionError("Пользователь должен существовать в БД"));
 
@@ -325,7 +325,7 @@ class UserServiceIntegrationTest extends AbstractIntegrationTest {
     @Test
     @DisplayName("Обновление всех полей профиля пользователя")
     void updateUser_shouldUpdateAllFields_whenAllFieldsProvided() {
-        // Arrange: Создаём аутентификацию и полное DTO обновления
+        // Создаём аутентификацию и полное DTO обновления
         Authentication authentication = createAuthenticationForUser(testUser, "password123");
 
         UpdateUser updateUser = new UpdateUser();
@@ -333,15 +333,15 @@ class UserServiceIntegrationTest extends AbstractIntegrationTest {
         updateUser.setLastName("Петров");
         updateUser.setPhone("+7 (888) 777-66-55");
 
-        // Act: Вызываем метод обновления профиля
+        // Вызываем метод обновления профиля
         UpdateUser result = userService.updateUser(authentication, updateUser);
 
-        // Assert: Проверяем возвращаемый DTO
+        // Проверяем возвращаемый DTO
         assertEquals("Пётр", result.getFirstName(), "Имя должно быть обновлено");
         assertEquals("Петров", result.getLastName(), "Фамилия должна быть обновлена");
         assertEquals("+7 (888) 777-66-55", result.getPhone(), "Телефон должен быть обновлён");
 
-        // Assert: Проверяем фактическое состояние в БД
+        // Проверяем фактическое состояние в БД
         UserEntity updatedUser = userRepository.findById(savedUserId)
                 .orElseThrow(() -> new AssertionError("Пользователь должен существовать в БД"));
 
@@ -364,8 +364,8 @@ class UserServiceIntegrationTest extends AbstractIntegrationTest {
      */
     private Authentication createAuthenticationForUser(UserEntity userEntity, String rawPassword) {
         return new UsernamePasswordAuthenticationToken(
-                userEntity.getEmail(), // principal (username)
-                rawPassword, // credentials (не проверяется в тестах сервиса)
+                userEntity.getEmail(),
+                rawPassword,
                 List.of(new SimpleGrantedAuthority("ROLE_" + userEntity.getRole().name()))
         );
     }
