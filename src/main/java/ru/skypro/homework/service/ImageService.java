@@ -54,5 +54,5 @@ public interface ImageService {
      * @param image файл изображения объявления
      * @return относительный путь к сохранённому изображению (например, "/ads/ad_456.jpg")
      */
-    byte[] uploadAdImage(Integer adId, MultipartFile image);
+    ImageEntity uploadAdImage(Integer adId, MultipartFile image);
 }

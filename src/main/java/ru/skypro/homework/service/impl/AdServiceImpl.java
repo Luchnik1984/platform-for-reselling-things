@@ -41,6 +41,7 @@ public class AdServiceImpl implements AdService {
     private final AdRepository adRepository;
     private final UserRepository userRepository;
     private final AdMapper adMapper;
+    private final ImageServiceImpl imageService;
 
     /**
      * {@inheritDoc}
@@ -153,11 +154,10 @@ public class AdServiceImpl implements AdService {
         AdEntity adEntity = adMapper.toEntity(createAd);
         adEntity.setAuthor(author);
 
-        // TODO: Реализовать после ImageService
-        // imageService.uploadAdImage(adEntity, image);
-
         AdEntity savedEntity = adRepository.save(adEntity);
         Ad createdAd = adMapper.toDto(savedEntity);
+
+        imageService.uploadAdImage(savedEntity.getId(), image);
 
         log.info("Создано объявление ID: {} пользователем {}", savedEntity.getId(), email);
         return createdAd;

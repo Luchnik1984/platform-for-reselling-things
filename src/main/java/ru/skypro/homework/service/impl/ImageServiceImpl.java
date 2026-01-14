@@ -6,6 +6,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 import org.springframework.web.multipart.MultipartFile;
+import org.springframework.util.StringUtils;
 import ru.skypro.homework.dto.user.User;
 import ru.skypro.homework.entity.AdEntity;
 import ru.skypro.homework.entity.ImageEntity;
@@ -56,9 +57,7 @@ public class ImageServiceImpl implements ImageService {
 
 
     // Допустимые форматы изображений
-    private static final String[] ALLOWED_CONTENT_TYPES = {
-            "image/jpeg", "image/png", "image/gif", "image/webp"
-    };
+    private static final String[] ALLOWED_CONTENT_TYPES = {"image/jpeg", "image/png", "image/gif", "image/webp"};
 
     // Максимальный размер файла (5MB)
     private static final long MAX_FILE_SIZE = 5 * 1024 * 1024;
@@ -190,19 +189,23 @@ public class ImageServiceImpl implements ImageService {
     public void uploadUserImage(Integer userId, MultipartFile image) {
 
         //Обновление и удаление старого файла
-        UserEntity user = userRepository.findById(userId)
-                .orElseThrow(() -> new UserNotFoundException(userId));
+        UserEntity user = userRepository.findById(userId).orElseThrow(() -> new UserNotFoundException(userId));
 
-        ImageEntity imageEntity = user.getImage();
+        //Сохраняет старое изображение для удаления
+        ImageEntity oldEntity = user.getImage();
 
-        user.setImage(imageRepository.save(uploadImage(image, AVATARS_DIR, AVATAR_WIDTH, AVATAR_HEIGHT)));
+        // Загружаем новое изображение
+        ImageEntity newEntity = uploadImage(image, AVATARS_DIR, AVATAR_WIDTH, AVATAR_HEIGHT);
+
+        // Сохраняем новое изображение в БД
+        ImageEntity savedEntity = imageRepository.save(newEntity);
+
+        // Обновляем связь в пользователе
+        user.setImage(savedEntity);
         userRepository.save(user);
 
-        if (imageEntity != null) {
-            String filePath = imageEntity.getFilePath();
-            String fileDirPath = Paths.get(UPLOAD_DIR, filePath).toString();
-            deleteFile(fileDirPath);
-        }
+        // Удаляем старый файл
+        delOldFile(oldEntity);
     }
 
     /**
@@ -215,26 +218,28 @@ public class ImageServiceImpl implements ImageService {
      */
     @Override
     @Transactional
-    public byte[] uploadAdImage(Integer adId, MultipartFile image) {
+    public ImageEntity uploadAdImage(Integer adId, MultipartFile image) {
 
         //Обновление и удаление старого файла
-        AdEntity ad = adRepository.findById(adId)
-                .orElseThrow(() -> new UserNotFoundException(adId));
+        AdEntity ad = adRepository.findById(adId).orElseThrow(() -> new IllegalArgumentException("Объявление не найдено"));
 
-        ImageEntity imageEntity = ad.getImage();
+        // Сохраняем старое изображение для удаления
+        ImageEntity oldEntity = ad.getImage();
 
-        ad.setImage(imageRepository.save(uploadImage(image, ADS_DIR, ADS_WIDTH, ADS_HEIGHT)));
+        // Загружаем новое изображение
+        ImageEntity newEntity = uploadImage(image, ADS_DIR, ADS_WIDTH, ADS_HEIGHT);
+
+        // Сохраняем новое изображение в БД
+        ImageEntity savedImage = imageRepository.save(newEntity);
+
+        // Обновляем связь в объявлении
+        ad.setImage(newEntity);
         adRepository.save(ad);
 
-        if (imageEntity != null) {
-            String filePath = imageEntity.getFilePath();
-            String fileDirPath = Paths.get(UPLOAD_DIR, filePath).toString();
-            deleteFile(fileDirPath);
-        }
+        // Удаляем старый файл
+        delOldFile(oldEntity);
 
-
-        return getImage(ad.getImage().getFilePath());
-
+        return savedImage;
     }
 
     /**
@@ -248,8 +253,7 @@ public class ImageServiceImpl implements ImageService {
      */
     private BufferedImage resizeImage(BufferedImage originalImage, int targetWidth, int targetHeight) {
         // Определяем тип изображения (для поддержки прозрачности PNG)
-        int type = originalImage.getTransparency() == Transparency.OPAQUE ?
-                BufferedImage.TYPE_INT_RGB : BufferedImage.TYPE_INT_ARGB;
+        int type = originalImage.getTransparency() == Transparency.OPAQUE ? BufferedImage.TYPE_INT_RGB : BufferedImage.TYPE_INT_ARGB;
 
         BufferedImage resizedImage = new BufferedImage(targetWidth, targetHeight, type);
         Graphics2D g = resizedImage.createGraphics();
@@ -343,5 +347,12 @@ public class ImageServiceImpl implements ImageService {
             e.printStackTrace();
             return false;
         }
+    }
+
+    public void delOldFile(ImageEntity imageEntity) {
+        if (imageEntity == null) return;
+        String filePath = imageEntity.getFilePath();
+        String fileDirPath = Paths.get(UPLOAD_DIR, filePath).toString();
+        deleteFile(fileDirPath);
     }
 }
