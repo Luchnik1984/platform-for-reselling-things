@@ -19,9 +19,11 @@ import ru.skypro.homework.dto.ads.Ad;
 import ru.skypro.homework.dto.ads.Ads;
 import ru.skypro.homework.dto.ads.CreateOrUpdateAd;
 import ru.skypro.homework.dto.ads.ExtendedAd;
+import ru.skypro.homework.entity.ImageEntity;
 import ru.skypro.homework.exceptions.AccessDeniedException;
 import ru.skypro.homework.exceptions.AdNotFoundException;
 import ru.skypro.homework.service.AdService;
+import ru.skypro.homework.service.ImageService;
 
 import javax.validation.Valid;
 
@@ -62,6 +64,7 @@ import javax.validation.Valid;
 public class AdController {
 
     private final AdService adService;
+    private final ImageService imageService;
 
     /**
      * Получение списка всех объявлений.
@@ -406,6 +409,7 @@ public class AdController {
             )
     })
     @PatchMapping(path = "/{id}/image", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+
     @ResponseStatus(HttpStatus.OK)
     public ResponseEntity<byte[]> updateAdImage(@PathVariable("id") Integer id,
                                                 @RequestPart("image") MultipartFile image,
@@ -420,18 +424,11 @@ public class AdController {
                 image.getSize(),
                 image.getContentType());
 
-        /* TODO: US9.2 - Реализовать полную логику через ImageService
-         Получить объявление через AdService (с проверкой существования)
-         Проверить права доступа:
-            - USER: adEntity.getAuthor().getEmail().equals(email)
-            - ADMIN: authentication.getAuthorities() содержит ROLE_ADMIN
-         Вызвать ImageService.uploadAdImage(adEntity, image)
-         Получить байты сохранённого изображения
-         Вернуть байты с правильными HTTP-заголовками
-         */
+        // Загружаем изображение и сохраняем в БД
+        ImageEntity savedImage = imageService.uploadAdImage(id, image);
 
-        // Временная заглушка: возвращаем пустой массив байтов
-        byte[] emptyBytes = new byte[0];
+        // Получаем байты изображения для ответа
+        byte[] imageBytes = imageService.getImage(savedImage.getFilePath());
 
         log.info("Изображение для объявления ID: {} принято (заглушка, US8.2). " +
                 "Полная реализация будет в US9.2.", id);
@@ -439,7 +436,7 @@ public class AdController {
         return ResponseEntity.ok()
                 .contentType(MediaType.APPLICATION_OCTET_STREAM)
                 .header("Content-Disposition", "inline")
-                .body(emptyBytes);
+                .body(imageBytes);
     }
 
     /**
