@@ -1,16 +1,13 @@
 package ru.skypro.homework.repository;
 
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.Nested;
-import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.*;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
 import ru.skypro.homework.AbstractIntegrationTest;
 import ru.skypro.homework.entity.AdEntity;
 import ru.skypro.homework.entity.CommentEntity;
 import ru.skypro.homework.entity.UserEntity;
 
+import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
 
@@ -24,7 +21,7 @@ import static org.junit.jupiter.api.Assertions.*;
  * Каждый тест использует УНИКАЛЬНЫЙ email для User entities
  * для избежания нарушения UNIQUE constraint на колонке email.
  */
-@SpringBootTest
+@Tag("integration")
 @DisplayName("Тесты AdRepository")
 class AdRepositoryIntegrationTest extends AbstractIntegrationTest {
 
@@ -39,9 +36,6 @@ class AdRepositoryIntegrationTest extends AbstractIntegrationTest {
 
     @Autowired
     private CommentRepository commentRepository;
-
-    @Autowired
-    private ImageRepository imageRepository;
 
 
     /**
@@ -411,7 +405,7 @@ class AdRepositoryIntegrationTest extends AbstractIntegrationTest {
             AdEntity expensive = adRepository.save(ad2);
 
             AdEntity mostExpensive = adRepository.findAll().stream()
-                    .max((a1, a2) -> Double.compare(a1.getPrice(), a2.getPrice()))
+                    .max(Comparator.comparingDouble(AdEntity::getPrice))
                     .orElse(null);
 
             assertNotNull(mostExpensive);

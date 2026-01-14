@@ -1,8 +1,10 @@
 package ru.skypro.homework.mapper;
 
 import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.mapstruct.factory.Mappers;
+import org.springframework.test.context.ActiveProfiles;
 import ru.skypro.homework.dto.comments.Comment;
 import ru.skypro.homework.dto.comments.CreateOrUpdateComment;
 import ru.skypro.homework.entity.AdEntity;
@@ -15,9 +17,10 @@ import java.time.ZoneOffset;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
-
+@Tag("unit")
+@ActiveProfiles("test")
 @DisplayName("CommentMapper impl tests (relations)")
-class CommentMapperTest {
+class CommentMapperUnitTest {
 
     private final CommentMapper mapper = Mappers.getMapper(CommentMapper.class);
 

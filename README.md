@@ -236,28 +236,20 @@
 
 ### Unit-тесты (H2)
 ```bash
-  ./mvnw test
-  # Запускаем интеграционные тесты
-  $env:SPRING_PROFILES_ACTIVE="test"
-# Устанавливаем профиль
-#
+   mvn.cmd test -Dgroups="unit"
 ```
 ### Интеграционные тесты (Testcontainers + PostgreSQL
 ```bash
-  ./mvnw test
-  # Запускаем интеграционные тесты
-  $env:SPRING_PROFILES_ACTIVE="docker-test"
-# Устанавливаем профиль
-#
+   mvn.cmd test -Dgroups="integration"
 ```
 ###  Все тесты
 ```bash
-  ./mvnw test 
+   ./mvnw test 
 ```
 
 ## Сборка пакета:
 ```bash
-  ./mvnw package 
+   ./mvnw package 
 ```
 
 ## Запуск фронтэнда:

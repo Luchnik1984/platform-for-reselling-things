@@ -6,8 +6,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 import org.springframework.web.multipart.MultipartFile;
-import org.springframework.util.StringUtils;
-import ru.skypro.homework.dto.user.User;
 import ru.skypro.homework.entity.AdEntity;
 import ru.skypro.homework.entity.ImageEntity;
 import ru.skypro.homework.entity.UserEntity;
@@ -24,7 +22,6 @@ import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.nio.file.StandardCopyOption;
 import java.util.UUID;
 
 import static org.flywaydb.core.internal.util.StringUtils.getFileExtension;
@@ -181,7 +178,7 @@ public class ImageServiceImpl implements ImageService {
      * Сохраняет аватар (изображение профиля) для конкретного пользователя.
      * Автоматически удаляет предыдущий аватар пользователя, если он существует.
      *
-     * @param userId
+     * @param userId id пользователя
      * @param image  файл изображения аватара
      */
     @Override

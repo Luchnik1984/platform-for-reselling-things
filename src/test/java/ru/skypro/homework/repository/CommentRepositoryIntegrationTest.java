@@ -1,11 +1,7 @@
 package ru.skypro.homework.repository;
 
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.Nested;
-import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.*;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
 import ru.skypro.homework.AbstractIntegrationTest;
 import ru.skypro.homework.entity.AdEntity;
 import ru.skypro.homework.entity.CommentEntity;
@@ -23,7 +19,7 @@ import static org.junit.jupiter.api.Assertions.*;
  * Проверяют CRUD операции, поиск комментариев, каскадное удаление и временные метки.
  * Используют PostgreSQL в Docker контейнере через AbstractIntegrationTest.
  */
-@SpringBootTest
+@Tag("integration")
 @DisplayName("Тесты CommentRepository")
 class CommentRepositoryIntegrationTest extends AbstractIntegrationTest {
 

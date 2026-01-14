@@ -2,8 +2,10 @@ package ru.skypro.homework.mapper;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.mapstruct.factory.Mappers;
+import org.springframework.test.context.ActiveProfiles;
 import ru.skypro.homework.dto.reg.Register;
 import ru.skypro.homework.dto.user.UpdateUser;
 import ru.skypro.homework.dto.user.User;
@@ -28,8 +30,10 @@ import static org.junit.jupiter.api.Assertions.*;
  * @see UserMapper
  * @see UserMapperImpl
  */
+@Tag("unit")
+@ActiveProfiles("test")
 @DisplayName("UserMapper impl tests")
-public class UserMapperTest {
+public class UserMapperUnitTest {
 
     /** Экземпляр тестируемого маппера, полученный через MapStruct */
     private UserMapper mapper;

@@ -1,11 +1,7 @@
 package ru.skypro.homework.repository;
 
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.Nested;
-import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.*;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.dao.DataIntegrityViolationException;
 import ru.skypro.homework.AbstractIntegrationTest;
 import ru.skypro.homework.entity.AdEntity;
@@ -24,7 +20,7 @@ import static org.assertj.core.api.Assertions.*;
  * Используют PostgreSQL в Docker контейнере через AbstractIntegrationTest.
  * Каждый тест использует уникальный email.
  */
-@SpringBootTest
+@Tag("integration")
 @DisplayName("Тесты UserRepository")
 class UserRepositoryIntegrationTest extends AbstractIntegrationTest {
 

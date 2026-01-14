@@ -2,6 +2,7 @@ package ru.skypro.homework.service.integration;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.Authentication;
@@ -47,6 +48,7 @@ import static org.junit.jupiter.api.Assertions.*;
  * @see AdServiceImpl
  * @see AbstractIntegrationTest
  */
+@Tag("integration")
 @Transactional
 @DisplayName("Интеграционные тесты AdService с Testcontainers")
 class AdServiceIntegrationTest extends AbstractIntegrationTest {
