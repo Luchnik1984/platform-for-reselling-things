@@ -16,7 +16,7 @@ import java.time.ZoneOffset;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
 
-@DisplayName("CommentMapper unit tests (relations)")
+@DisplayName("CommentMapper impl tests (relations)")
 class CommentMapperTest {
 
     private final CommentMapper mapper = Mappers.getMapper(CommentMapper.class);

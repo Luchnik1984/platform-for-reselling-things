@@ -19,6 +19,7 @@ import ru.skypro.homework.enums.Role;
 import ru.skypro.homework.exceptions.InvalidPasswordException;
 import ru.skypro.homework.mapper.UserMapper;
 import ru.skypro.homework.repository.UserRepository;
+import ru.skypro.homework.service.impl.UserServiceImpl;
 
 import java.util.Optional;
 

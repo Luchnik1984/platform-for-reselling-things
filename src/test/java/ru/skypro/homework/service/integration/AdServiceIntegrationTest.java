@@ -21,7 +21,7 @@ import ru.skypro.homework.exceptions.GlobalExceptionHandler;
 import ru.skypro.homework.repository.AdRepository;
 import ru.skypro.homework.repository.UserRepository;
 import ru.skypro.homework.service.AdService;
-import ru.skypro.homework.service.unit.AdServiceImpl;
+import ru.skypro.homework.service.impl.AdServiceImpl;
 import ru.skypro.homework.util.SecurityUtils;
 
 import java.util.List;

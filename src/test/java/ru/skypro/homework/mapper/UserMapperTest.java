@@ -28,7 +28,7 @@ import static org.junit.jupiter.api.Assertions.*;
  * @see UserMapper
  * @see UserMapperImpl
  */
-@DisplayName("UserMapper unit tests")
+@DisplayName("UserMapper impl tests")
 public class UserMapperTest {
 
     /** Экземпляр тестируемого маппера, полученный через MapStruct */
