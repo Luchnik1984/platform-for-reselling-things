@@ -1,4 +1,4 @@
-package ru.skypro.homework.integrationTest;
+package ru.skypro.homework.repository;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -8,7 +8,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import ru.skypro.homework.AbstractIntegrationTest;
 import ru.skypro.homework.entity.ImageEntity;
-import ru.skypro.homework.repository.ImageRepository;
 
 import java.util.List;
 import java.util.Optional;

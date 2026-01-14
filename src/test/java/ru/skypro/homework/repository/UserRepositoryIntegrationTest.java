@@ -1,4 +1,4 @@
-package ru.skypro.homework.integrationTest;
+package ru.skypro.homework.repository;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -12,9 +12,6 @@ import ru.skypro.homework.entity.AdEntity;
 import ru.skypro.homework.entity.CommentEntity;
 import ru.skypro.homework.entity.UserEntity;
 import ru.skypro.homework.enums.Role;
-import ru.skypro.homework.repository.AdRepository;
-import ru.skypro.homework.repository.CommentRepository;
-import ru.skypro.homework.repository.UserRepository;
 
 import java.util.List;
 import java.util.Optional;
