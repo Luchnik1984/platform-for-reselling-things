@@ -147,7 +147,7 @@ class UserControllerIntegrationTest extends AbstractIntegrationTest {
         createUser("wrongpass@test.ru", Role.USER);
 
         NewPassword request = new NewPassword();
-        request.setCurrentPassword("wrongpass");
+        request.setCurrentPassword("wrongpass123");
         request.setNewPassword("newpassword123");
 
         mockMvc.perform(post("/users/set_password")
