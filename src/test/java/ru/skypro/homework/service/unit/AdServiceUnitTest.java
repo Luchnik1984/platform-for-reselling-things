@@ -1,5 +1,6 @@
-package ru.skypro.homework.service.uniteTest;
+package ru.skypro.homework.service.unit;
 
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -7,6 +8,7 @@ import org.mockito.Mock;
 import org.mockito.MockedStatic;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.core.Authentication;
+import org.springframework.test.context.ActiveProfiles;
 import ru.skypro.homework.dto.ads.Ad;
 import ru.skypro.homework.dto.ads.CreateOrUpdateAd;
 import ru.skypro.homework.entity.AdEntity;
@@ -29,6 +31,8 @@ import static org.mockito.Mockito.*;
  * <p>
  * Фокус: CRUD + проверка прав (author vs ADMIN).
  */
+@Tag("unit")
+@ActiveProfiles("test")
 @ExtendWith(MockitoExtension.class)
 class AdServiceUnitTest {
 
