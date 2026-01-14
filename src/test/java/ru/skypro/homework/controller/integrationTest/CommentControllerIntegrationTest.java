@@ -5,7 +5,6 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.http.MediaType;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.test.context.support.WithMockUser;
@@ -37,7 +36,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
  *   <li>DELETE /ads/{adId}/comments/{commentId}</li>
  * </ul>
  */
-@AutoConfigureMockMvc
+
 @DisplayName("CommentController Integration Tests")
 class CommentControllerIntegrationTest extends AbstractIntegrationTest {
 
