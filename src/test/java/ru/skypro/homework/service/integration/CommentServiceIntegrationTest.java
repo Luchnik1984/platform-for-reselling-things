@@ -4,9 +4,7 @@ import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
-import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.transaction.annotation.Transactional;
 import ru.skypro.homework.AbstractIntegrationTest;
@@ -27,7 +25,6 @@ import ru.skypro.homework.service.CommentService;
 import ru.skypro.homework.service.unit.CommentServiceImpl;
 import ru.skypro.homework.util.SecurityUtils;
 
-import java.util.Collections;
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -556,27 +553,4 @@ class CommentServiceIntegrationTest extends AbstractIntegrationTest {
         return userRepository.save(userEntity);
     }
 
-    /**
-     * Создает объект {@link Authentication} для тестов.
-     *
-     * @param username имя пользователя (email)
-     * @param role роль пользователя
-     * @return объект аутентификации
-     */
-    private Authentication createAuthentication(String username, Role role) {
-        List<SimpleGrantedAuthority> authorities;
-
-        if (role == Role.ADMIN) {
-            authorities = List.of(
-                    new SimpleGrantedAuthority("ROLE_ADMIN"),
-                    new SimpleGrantedAuthority("ROLE_USER")
-            );
-        } else {
-            authorities = Collections.singletonList(
-                    new SimpleGrantedAuthority("ROLE_USER")
-            );
-        }
-
-        return new UsernamePasswordAuthenticationToken(username, "password", authorities);
-    }
 }

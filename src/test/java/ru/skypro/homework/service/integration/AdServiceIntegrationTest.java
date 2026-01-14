@@ -4,9 +4,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
-import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.transaction.annotation.Transactional;
 import ru.skypro.homework.AbstractIntegrationTest;
@@ -26,8 +24,6 @@ import ru.skypro.homework.service.AdService;
 import ru.skypro.homework.service.unit.AdServiceImpl;
 import ru.skypro.homework.util.SecurityUtils;
 
-
-import java.util.Collections;
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -96,29 +92,17 @@ class AdServiceIntegrationTest extends AbstractIntegrationTest {
     @Autowired
     private PasswordEncoder passwordEncoder;
 
-    /**
-     * Тестовый пользователь с ролью USER (автор большинства объявлений).
-     * <p>
-     * Создается в методе {@link #setUp()} перед каждым тестом.
-     * Используется в тестах, где нужен обычный пользователь.
-     */
     private UserEntity user1;
 
-    /**
-     * Второй тестовый пользователь с ролью USER.
-     * <p>
-     * Создается для проверки сценариев с разными авторами,
-     * в частности для тестирования проверки прав доступа.
-     */
     private UserEntity user2;
 
-    /**
-     * Тестовый пользователь с ролью ADMIN.
-     * <p>
-     * Используется для тестирования административных привилегий,
-     * когда ADMIN может управлять чужими объявлениями.
-     */
     private UserEntity adminUser;
+
+    private Authentication user1Auth;
+
+    private Authentication user2Auth;
+
+    private Authentication adminUserAuth;
 
     /**
      * Идентификатор сохраненного тестового объявления.
@@ -128,11 +112,6 @@ class AdServiceIntegrationTest extends AbstractIntegrationTest {
      */
     private Integer savedAdId;
 
-    private Authentication user1Auth;
-
-    private Authentication adminAuth;
-
-    private Authentication user2Auth;
 
     /**
      * Подготовка тестовых данных перед каждым тестом.
@@ -199,9 +178,10 @@ class AdServiceIntegrationTest extends AbstractIntegrationTest {
         AdEntity savedAd3 = adRepository.save(ad3);
         savedAdId = savedAd3.getId();
 
-        Authentication user1Auth = TestAuthenticationUtils.createAuthentication(user1);
-        Authentication user2Auth = TestAuthenticationUtils.createAuthentication(user2);
-        Authentication adminUserAuth = TestAuthenticationUtils.createAuthentication(adminUser);
+        user1Auth = TestAuthenticationUtils.createAuthentication(user1);
+        adminUserAuth = TestAuthenticationUtils.createAuthentication(adminUser);
+        user2Auth = TestAuthenticationUtils.createAuthentication(user2);
+
     }
 
     /**
@@ -262,11 +242,9 @@ class AdServiceIntegrationTest extends AbstractIntegrationTest {
     @Test
     @DisplayName("Получение объявлений текущего пользователя (фильтрация по автору)")
     void getUserAds_shouldReturnOnlyUserAds_whenUserHasAds() {
-        // Создаём аутентификацию для user1 (у него 2 объявления)
-        Authentication authentication = TestAuthenticationUtils.createAuthentication(user1);
 
         // Получаем объявления только для user1
-        Ads result = adService.getUserAds(authentication);
+        Ads result = adService.getUserAds(user1Auth);
 
         // Проверяем результат
         assertEquals(2, result.getCount(), "User1 должен иметь 2 объявления");
@@ -401,14 +379,13 @@ class AdServiceIntegrationTest extends AbstractIntegrationTest {
     @Test
     @DisplayName("Исключение при попытке удалить чужое объявление")
     void deleteAd_shouldThrowAccessDeniedException_whenUserTriesToDeleteOthersAd() {
-        //  User2 пытается удалить объявление user1
-        Authentication authentication = TestAuthenticationUtils.createAuthentication(user2);
+
         Integer adIdToDelete = adRepository.findAllByAuthorId(user1.getId()).get(0).getId();
         int initialAdCount = adRepository.findAll().size();
 
         //  Проверяем, что исключение выбрасывается
         assertThrows(AccessDeniedException.class, () ->
-                adService.deleteAd(adIdToDelete, authentication),
+                adService.deleteAd(adIdToDelete, user2Auth),
                 "Должно быть выброшено AccessDeniedException при попытке удалить чужое объявление");
 
         // Проверяем, что объявление не удалено из БД
@@ -432,13 +409,12 @@ class AdServiceIntegrationTest extends AbstractIntegrationTest {
     @Test
     @DisplayName("Успешное удаление своего объявления")
     void deleteAd_shouldDeleteAd_whenUserIsAuthor() {
-        // User1 удаляет свое объявление
-        Authentication authentication = TestAuthenticationUtils.createAuthentication(user1);
+
         Integer adIdToDelete = adRepository.findAllByAuthorId(user1.getId()).get(0).getId();
         int initialAdCount = adRepository.findAll().size();
 
         // Удаляем объявление
-        adService.deleteAd(adIdToDelete, authentication);
+        adService.deleteAd(adIdToDelete, user1Auth);
 
         // Проверяем, что объявление удалено
         int finalAdCount = adRepository.findAll().size();
@@ -461,13 +437,12 @@ class AdServiceIntegrationTest extends AbstractIntegrationTest {
     @Test
     @DisplayName("Успешное удаление любого объявления администратором")
     void deleteAd_shouldDeleteAnyAd_whenUserIsAdmin() {
-        // ADMIN удаляет объявление user1
-        Authentication authentication = TestAuthenticationUtils.createAuthentication(adminUser);
+
         Integer adIdToDelete = adRepository.findAllByAuthorId(user1.getId()).get(0).getId();
         int initialAdCount = adRepository.findAll().size();
 
         //  Администратор удаляет объявление
-        adService.deleteAd(adIdToDelete, authentication);
+        adService.deleteAd(adIdToDelete, adminUserAuth);
 
         //  Проверяем, что объявление удалено
         int finalAdCount = adRepository.findAll().size();
@@ -490,8 +465,7 @@ class AdServiceIntegrationTest extends AbstractIntegrationTest {
     @Test
     @DisplayName("Успешное обновление своего объявления")
     void updateAd_shouldUpdateAd_whenUserIsAuthor() {
-        // User1 обновляет свое объявление
-        Authentication authentication = TestAuthenticationUtils.createAuthentication(user1);
+
         Integer adIdToUpdate = adRepository.findAllByAuthorId(user1.getId()).get(0).getId();
 
         CreateOrUpdateAd updateData = new CreateOrUpdateAd();
@@ -500,7 +474,7 @@ class AdServiceIntegrationTest extends AbstractIntegrationTest {
         updateData.setDescription("Обновленное описание");
 
         // Обновляем объявление
-        Ad updatedAd = adService.updateAd(adIdToUpdate, authentication, updateData);
+        Ad updatedAd = adService.updateAd(adIdToUpdate, user1Auth, updateData);
 
         // Проверяем возвращаемый DTO
         assertEquals(adIdToUpdate, updatedAd.getPk(), "ID должен совпадать");
@@ -540,34 +514,4 @@ class AdServiceIntegrationTest extends AbstractIntegrationTest {
         return userRepository.save(user);
     }
 
-    /**
-     * Создает объект {@link Authentication} для тестового пользователя.
-     * <p>
-     * Имитирует успешную аутентификацию через Spring Security.
-     * Устанавливает principal (email), credentials (пароль) и authorities (роли).
-     *
-     * @param userEntity сущность пользователя, для которого создается аутентификация
-     * @return объект {@link Authentication} с установленными principal и authorities
-     */
-    private Authentication createAuthenticationForUser(UserEntity userEntity) {
-        List<SimpleGrantedAuthority> authorities;
-
-        if (userEntity.getRole() == Role.ADMIN) {
-            // ADMIN должен иметь ОБЕ роли
-            authorities = List.of(
-                    new SimpleGrantedAuthority("ROLE_ADMIN"),
-                    new SimpleGrantedAuthority("ROLE_USER")
-            );
-        } else {
-            authorities = Collections.singletonList(
-                    new SimpleGrantedAuthority("ROLE_USER")
-            );
-        }
-
-        return new UsernamePasswordAuthenticationToken(
-                userEntity.getEmail(),
-                "password",
-                authorities
-        );
-    }
 }

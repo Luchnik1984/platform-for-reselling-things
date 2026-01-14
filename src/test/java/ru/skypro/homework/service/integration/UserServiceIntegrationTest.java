@@ -4,9 +4,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
-import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.transaction.annotation.Transactional;
 import ru.skypro.homework.AbstractIntegrationTest;
@@ -19,8 +17,6 @@ import ru.skypro.homework.exceptions.InvalidPasswordException;
 import ru.skypro.homework.repository.UserRepository;
 import ru.skypro.homework.service.UserService;
 import ru.skypro.homework.service.unit.UserServiceImpl;
-
-import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -67,42 +63,17 @@ class UserServiceIntegrationTest extends AbstractIntegrationTest {
     @Autowired
     private UserService userService;
 
-    /**
-     * Репозиторий пользователей для подготовки тестовых данных.
-     * <p>
-     * <b>Назначение в тестах:</b>
-     * <ol>
-     *   <li>Создание тестовых пользователей перед каждым тестом</li>
-     *   <li>Проверка состояния БД после выполнения операций сервиса</li>
-     *   <li>Очистка тестовых данных через транзакционный rollback</li>
-     * </ol>
-     */
     @Autowired
     private UserRepository userRepository;
 
-    /**
-     * Кодировщик паролей для проверки хеширования.
-     * <p>
-     * <b>Важно:</b> Используется тот же PasswordEncoder (BCrypt),
-     * что и в основном приложении, для корректной проверки паролей.
-     */
     @Autowired
     private PasswordEncoder passwordEncoder;
 
-    /**
-     * Тестовый пользователь USER.
-     * <p>
-     * Создаётся перед каждым тестом в методе {@link #setUp()}.
-     * Используется в большинстве тестов для симуляции аутентифицированного пользователя.
-     */
     private UserEntity testUser;
 
-    /**
-     * Идентификатор сохранённого тестового пользователя.
-     * <p>
-     * Сохраняется для последующего сравнения в assertions.
-     */
     private Integer savedUserId;
+
+    private Authentication userAuth;
 
     /**
      * Подготовка тестовых данных перед каждым тестом.
@@ -139,6 +110,9 @@ class UserServiceIntegrationTest extends AbstractIntegrationTest {
 
         UserEntity savedUser = userRepository.save(testUser);
         savedUserId = savedUser.getId();
+
+        // Создание объектов Authentication для тестов
+        userAuth = TestAuthenticationUtils.createAuthentication(testUser);
     }
 
     /**
@@ -159,11 +133,9 @@ class UserServiceIntegrationTest extends AbstractIntegrationTest {
     @Test
     @DisplayName("Успешное получение профиля текущего пользователя")
     void getCurrentUser_shouldReturnUserDto_whenUserAuthenticated() {
-        // Создаём объект аутентификации для тестового пользователя
-        Authentication authentication = createAuthenticationForUser(testUser, "password123");
 
         // Вызываем тестируемый метод сервиса
-        User result = userService.getCurrentUser(authentication);
+        User result = userService.getCurrentUser(userAuth);
 
         // Проверяем корректность результата
         assertNotNull(result, "Результат не должен быть null");
@@ -195,16 +167,14 @@ class UserServiceIntegrationTest extends AbstractIntegrationTest {
     @Test
     @DisplayName("Частичное обновление профиля пользователя")
     void updateUser_shouldUpdateOnlyProvidedFields_whenPartialUpdate() {
-        // Создаём аутентификацию и DTO для обновления
-        Authentication authentication = createAuthenticationForUser(testUser, "password123");
 
         UpdateUser updateUser = new UpdateUser();
-        updateUser.setFirstName("Алексей"); // Меняем только имя
-        updateUser.setLastName(null); // Фамилия не обновляется
-        updateUser.setPhone(null); // Телефон не обновляется
+        updateUser.setFirstName("Алексей");
+        updateUser.setLastName(null);
+        updateUser.setPhone(null);
 
         // Вызываем метод обновления профиля
-        UpdateUser result = userService.updateUser(authentication, updateUser);
+        UpdateUser result = userService.updateUser(userAuth, updateUser);
 
         // Проверяем возвращаемый DTO
         assertEquals("Алексей", result.getFirstName(), "Имя должно быть обновлено в DTO");
@@ -240,18 +210,16 @@ class UserServiceIntegrationTest extends AbstractIntegrationTest {
     @Test
     @DisplayName("Успешная смена пароля при верном текущем пароле")
     void updatePassword_shouldUpdatePassword_whenCurrentPasswordIsCorrect() {
-        // Создаём аутентификацию и DTO смены пароля
-        Authentication authentication = createAuthenticationForUser(testUser, "password123");
 
         NewPassword newPassword = new NewPassword();
-        newPassword.setCurrentPassword("password123"); // Верный текущий пароль
-        newPassword.setNewPassword("newSecurePassword456"); // Новый пароль
+        newPassword.setCurrentPassword("password123");
+        newPassword.setNewPassword("newSecurePassword456");
 
         // Сохраняем старый хеш для последующего сравнения
         String oldPasswordHash = testUser.getPassword();
 
         // Вызываем метод смены пароля
-        userService.updatePassword(authentication, newPassword);
+        userService.updatePassword(userAuth, newPassword);
 
         // Проверяем, что пароль изменился в БД
         UserEntity updatedUser = userRepository.findById(savedUserId)
@@ -286,8 +254,6 @@ class UserServiceIntegrationTest extends AbstractIntegrationTest {
     @Test
     @DisplayName("Исключение при смене пароля с неверным текущим паролем")
     void updatePassword_shouldThrowInvalidPasswordException_whenCurrentPasswordIsWrong() {
-        // Создаём аутентификацию и DTO с неверным текущим паролем
-        Authentication authentication = createAuthenticationForUser(testUser, "password123");
 
         NewPassword newPassword = new NewPassword();
         newPassword.setCurrentPassword("wrongPassword"); // Неверный текущий пароль
@@ -297,7 +263,8 @@ class UserServiceIntegrationTest extends AbstractIntegrationTest {
         String originalPasswordHash = testUser.getPassword();
 
         // Проверяем, что исключение выбрасывается
-        assertThrows(InvalidPasswordException.class, () -> userService.updatePassword(authentication, newPassword), "Должно быть выброшено InvalidPasswordException при неверном текущем пароле");
+        assertThrows(InvalidPasswordException.class, () -> userService.updatePassword(userAuth, newPassword),
+                "Должно быть выброшено InvalidPasswordException при неверном текущем пароле");
 
         // Проверяем, что пароль в БД не изменился
         UserEntity unchangedUser = userRepository.findById(savedUserId)
@@ -325,8 +292,6 @@ class UserServiceIntegrationTest extends AbstractIntegrationTest {
     @Test
     @DisplayName("Обновление всех полей профиля пользователя")
     void updateUser_shouldUpdateAllFields_whenAllFieldsProvided() {
-        // Создаём аутентификацию и полное DTO обновления
-        Authentication authentication = createAuthenticationForUser(testUser, "password123");
 
         UpdateUser updateUser = new UpdateUser();
         updateUser.setFirstName("Пётр");
@@ -334,7 +299,7 @@ class UserServiceIntegrationTest extends AbstractIntegrationTest {
         updateUser.setPhone("+7 (888) 777-66-55");
 
         // Вызываем метод обновления профиля
-        UpdateUser result = userService.updateUser(authentication, updateUser);
+        UpdateUser result = userService.updateUser(userAuth, updateUser);
 
         // Проверяем возвращаемый DTO
         assertEquals("Пётр", result.getFirstName(), "Имя должно быть обновлено");
@@ -352,21 +317,4 @@ class UserServiceIntegrationTest extends AbstractIntegrationTest {
         assertEquals(testUser.getRole(), updatedUser.getRole(), "Роль не должна изменяться");
     }
 
-    /**
-     * Создаёт объект {@link Authentication} для тестового пользователя.
-     * <p>
-     * <b>Вспомогательный метод</b> для единообразного создания аутентификации
-     * во всех тестах. Имитирует успешную аутентификацию через Spring Security.
-     *
-     * @param userEntity сущность пользователя, для которого создаётся аутентификация
-     * @param rawPassword сырой пароль для создания учётных данных (не используется для проверки)
-     * @return объект {@link Authentication} с установленными principal и authorities
-     */
-    private Authentication createAuthenticationForUser(UserEntity userEntity, String rawPassword) {
-        return new UsernamePasswordAuthenticationToken(
-                userEntity.getEmail(),
-                rawPassword,
-                List.of(new SimpleGrantedAuthority("ROLE_" + userEntity.getRole().name()))
-        );
-    }
 }
