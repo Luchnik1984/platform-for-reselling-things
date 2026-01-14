@@ -22,6 +22,7 @@ import ru.skypro.homework.dto.ads.ExtendedAd;
 import ru.skypro.homework.exceptions.AccessDeniedException;
 import ru.skypro.homework.exceptions.AdNotFoundException;
 import ru.skypro.homework.service.AdService;
+import ru.skypro.homework.service.ImageService;
 
 import javax.validation.Valid;
 
@@ -62,6 +63,7 @@ import javax.validation.Valid;
 public class AdController {
 
     private final AdService adService;
+    private final ImageService imageService;
 
     /**
      * Получение списка всех объявлений.
@@ -406,6 +408,7 @@ public class AdController {
             )
     })
     @PatchMapping(path = "/{id}/image", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+
     @ResponseStatus(HttpStatus.OK)
     public ResponseEntity<byte[]> updateAdImage(@PathVariable("id") Integer id,
                                                 @RequestPart("image") MultipartFile image,
@@ -429,9 +432,8 @@ public class AdController {
          Получить байты сохранённого изображения
          Вернуть байты с правильными HTTP-заголовками
          */
-
         // Временная заглушка: возвращаем пустой массив байтов
-        byte[] emptyBytes = new byte[0];
+        byte[] emptyBytes = imageService.uploadAdImage(id,image);
 
         log.info("Изображение для объявления ID: {} принято (заглушка, US8.2). " +
                 "Полная реализация будет в US9.2.", id);

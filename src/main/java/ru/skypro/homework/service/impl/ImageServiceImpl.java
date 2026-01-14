@@ -7,6 +7,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 import org.springframework.web.multipart.MultipartFile;
 import ru.skypro.homework.dto.user.User;
+import ru.skypro.homework.entity.AdEntity;
 import ru.skypro.homework.entity.ImageEntity;
 import ru.skypro.homework.entity.UserEntity;
 import ru.skypro.homework.exceptions.UserNotFoundException;
@@ -46,6 +47,7 @@ public class ImageServiceImpl implements ImageService {
 
     private final ImageRepository imageRepository;
     private final UserRepository userRepository;
+    private final AdRepository adRepository;
 
     // Конфигурация путей
     private static final String UPLOAD_DIR = "uploads";
@@ -79,6 +81,7 @@ public class ImageServiceImpl implements ImageService {
      * @return относительный путь к сохранённому файлу (например, ".images/ads_123.jpg")
      */
     @Override
+    @Transactional
     public ImageEntity uploadImage(MultipartFile image, String imageUploadPath, int width, int height) {
         // Проверяем, что файл не пустой
         if (image == null || image.isEmpty()) {
@@ -149,6 +152,7 @@ public class ImageServiceImpl implements ImageService {
      * @return массив байтов содержимого изображения
      */
     @Override
+    @Transactional
     public byte[] getImage(String filePath) {
         try {
             // Безопасная проверка имени файла
@@ -157,16 +161,13 @@ public class ImageServiceImpl implements ImageService {
             }
 
             // Ищем файл в разных директориях
-            Path[] possiblePaths = {
-                    Paths.get(AVATARS_DIR, filePath),
-                    Paths.get(ADS_DIR, filePath)
-            };
+            Path path = Paths.get(UPLOAD_DIR, filePath);
 
-            for (Path path : possiblePaths) {
-                if (Files.exists(path) && Files.isReadable(path)) {
-                    return Files.readAllBytes(path);
-                }
+
+            if (Files.exists(path) && Files.isReadable(path)) {
+                return Files.readAllBytes(path);
             }
+
 
             throw new FileNotFoundException("Файл не найден: " + filePath);
 
@@ -182,7 +183,7 @@ public class ImageServiceImpl implements ImageService {
      * Автоматически удаляет предыдущий аватар пользователя, если он существует.
      *
      * @param userId
-     * @param image файл изображения аватара
+     * @param image  файл изображения аватара
      */
     @Override
     @Transactional
@@ -191,16 +192,17 @@ public class ImageServiceImpl implements ImageService {
         //Обновление и удаление старого файла
         UserEntity user = userRepository.findById(userId)
                 .orElseThrow(() -> new UserNotFoundException(userId));
-                ImageEntity imageEntity = user.getImage();
+
+        ImageEntity imageEntity = user.getImage();
+
+        user.setImage(imageRepository.save(uploadImage(image, AVATARS_DIR, AVATAR_WIDTH, AVATAR_HEIGHT)));
+        userRepository.save(user);
+
         if (imageEntity != null) {
             String filePath = imageEntity.getFilePath();
             String fileDirPath = Paths.get(UPLOAD_DIR, filePath).toString();
             deleteFile(fileDirPath);
         }
-
-        user.setImage(imageRepository.save(uploadImage(image, AVATARS_DIR, AVATAR_WIDTH, AVATAR_HEIGHT)));
-        userRepository.save(user);
-
     }
 
     /**
@@ -212,8 +214,27 @@ public class ImageServiceImpl implements ImageService {
      * @return относительный путь к сохранённому изображению (например, "/ads/ad_456.jpg")
      */
     @Override
-    public String uploadAdImage(Integer adId, MultipartFile image) {
-        return "";
+    @Transactional
+    public byte[] uploadAdImage(Integer adId, MultipartFile image) {
+
+        //Обновление и удаление старого файла
+        AdEntity ad = adRepository.findById(adId)
+                .orElseThrow(() -> new UserNotFoundException(adId));
+
+        ImageEntity imageEntity = ad.getImage();
+
+        ad.setImage(imageRepository.save(uploadImage(image, ADS_DIR, ADS_WIDTH, ADS_HEIGHT)));
+        adRepository.save(ad);
+
+        if (imageEntity != null) {
+            String filePath = imageEntity.getFilePath();
+            String fileDirPath = Paths.get(UPLOAD_DIR, filePath).toString();
+            deleteFile(fileDirPath);
+        }
+
+
+        return getImage(ad.getImage().getFilePath());
+
     }
 
     /**
