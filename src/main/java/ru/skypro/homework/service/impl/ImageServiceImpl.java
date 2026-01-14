@@ -129,7 +129,9 @@ public class ImageServiceImpl implements ImageService {
             }
 
             // Формируем относительный путь для хранения в БД
-            String relativePath = Paths.get("").relativize(filePath).toString();
+
+            String relativePath = Paths.get(UPLOAD_DIR).relativize(filePath).toString();
+            //String relativePath = Paths.get("uploads/").relativize(filePath).toString();
 
             // Создаем и возвращаем сущность изображения
             return new ImageEntity(relativePath, fileSize, mediaType);
@@ -192,7 +194,8 @@ public class ImageServiceImpl implements ImageService {
                 ImageEntity imageEntity = user.getImage();
         if (imageEntity != null) {
             String filePath = imageEntity.getFilePath();
-            deleteFile(filePath);
+            String fileDirPath = Paths.get(UPLOAD_DIR, filePath).toString();
+            deleteFile(fileDirPath);
         }
 
         user.setImage(imageRepository.save(uploadImage(image, AVATARS_DIR, AVATAR_WIDTH, AVATAR_HEIGHT)));
