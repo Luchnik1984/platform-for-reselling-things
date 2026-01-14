@@ -1,9 +1,11 @@
 package ru.skypro.homework.mapper;
 
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.test.context.ActiveProfiles;
 import ru.skypro.homework.dto.ads.Ad;
 import ru.skypro.homework.dto.ads.CreateOrUpdateAd;
 import ru.skypro.homework.dto.ads.ExtendedAd;
@@ -32,8 +34,10 @@ import static org.junit.jupiter.api.Assertions.*;
  * @see AdMapper
  * @see AdMapperImpl
  */
+@Tag("unit")
+@ActiveProfiles("test")
 @ExtendWith(MockitoExtension.class)
-public class AdMapperTest {
+public class AdMapperUnitTest {
 
     /**
      * Тестируемая реализация маппера, сгенерированная MapStruct.
@@ -58,8 +62,6 @@ public class AdMapperTest {
     /** Тестовый заголовок для обновления. */
     private static final String UPDATED_TITLE = "Новый заголовок";
 
-    /** Тестовая цена для обновления. */
-    private static final int UPDATED_PRICE = 20000;
 
     /**
      * Тест: преобразование {@link CreateOrUpdateAd} → {@link AdEntity}.

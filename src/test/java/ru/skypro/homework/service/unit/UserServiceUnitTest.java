@@ -1,6 +1,7 @@
-package ru.skypro.homework.service.impl;
+package ru.skypro.homework.service.unit;
 
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -10,6 +11,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.test.context.ActiveProfiles;
 import org.springframework.web.server.ResponseStatusException;
 import ru.skypro.homework.dto.user.NewPassword;
 import ru.skypro.homework.dto.user.UpdateUser;
@@ -19,6 +21,7 @@ import ru.skypro.homework.enums.Role;
 import ru.skypro.homework.exceptions.InvalidPasswordException;
 import ru.skypro.homework.mapper.UserMapper;
 import ru.skypro.homework.repository.UserRepository;
+import ru.skypro.homework.service.impl.UserServiceImpl;
 
 import java.util.Optional;
 
@@ -33,6 +36,8 @@ import static org.mockito.Mockito.*;
  *
  * <p>Использует Mockito для изоляции тестируемого сервиса от зависимостей.
  */
+@Tag("unit")
+@ActiveProfiles("test")
 @ExtendWith(MockitoExtension.class)
 public class UserServiceUnitTest {
 

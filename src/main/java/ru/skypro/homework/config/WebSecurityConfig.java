@@ -6,12 +6,10 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AuthenticationManager;
-import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.method.configuration.EnableGlobalMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
-import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.provisioning.JdbcUserDetailsManager;
@@ -134,22 +132,12 @@ public class WebSecurityConfig {
                                         .permitAll()
 
                                         // GET /ads доступен всем
-                                        .mvcMatchers(HttpMethod.GET,"/ads")
+                                        .mvcMatchers(HttpMethod.GET, "/ads")
                                         .permitAll()
 
                                         // Остальные запросы требуют аутентификации
                                         .mvcMatchers("/ads/**", "/users/**", "/comments/**")
                                         .authenticated()
-
-                                        // Модифицирующие операции требуют роли USER или ADMIN
-                                        .mvcMatchers(HttpMethod.POST, "/ads/**", "/comments/**")
-                                        .hasAnyRole("USER", "ADMIN")
-                                        .mvcMatchers(HttpMethod.PUT, "/ads/**", "/comments/**")
-                                        .hasAnyRole("USER", "ADMIN")
-                                        .mvcMatchers(HttpMethod.PATCH, "/ads/**", "/comments/**", "/users/**")
-                                        .hasAnyRole("USER", "ADMIN")
-                                        .mvcMatchers(HttpMethod.DELETE, "/ads/**", "/comments/**")
-                                        .hasAnyRole("USER", "ADMIN")
                 )
                 .httpBasic(withDefaults());
         return http.build();
@@ -215,27 +203,6 @@ public class WebSecurityConfig {
     public AuthenticationManager authenticationManagerBean(
             AuthenticationConfiguration authConfig) throws Exception {
         return authConfig.getAuthenticationManager();
-    }
-
-    /**
-     * AuthenticationManager для использования в сервисах (альтернативная версия).
-     * Настраивается с JdbcUserDetailsManager и PasswordEncoder.
-     */
-    @Bean
-    public AuthenticationManager authenticationManager(
-            HttpSecurity http,
-            UserDetailsService userDetailsService,
-            PasswordEncoder passwordEncoder) throws Exception {
-
-        AuthenticationManagerBuilder authManagerBuilder =
-                http.getSharedObject(AuthenticationManagerBuilder.class);
-
-        // Настраиваем DaoAuthenticationProvider с JdbcUserDetailsManager
-        authManagerBuilder
-                .userDetailsService(userDetailsService)
-                .passwordEncoder(passwordEncoder);
-
-        return authManagerBuilder.build();
     }
 
 }

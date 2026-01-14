@@ -3,6 +3,7 @@ package ru.skypro.homework.entity;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import lombok.ToString;
 
 import javax.persistence.*;
 import javax.validation.constraints.Min;
@@ -78,6 +79,7 @@ public class AdEntity {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "author_id", nullable = false)
     @NotNull(message = "Автор не может быть null")
+    @ToString.Exclude
     private UserEntity author;
 
     /**
@@ -87,6 +89,7 @@ public class AdEntity {
             orphanRemoval = true,
             fetch = FetchType.LAZY
     )
+    @ToString.Exclude
     @JoinColumn(name = "image_id")
     private ImageEntity image;
 
@@ -94,6 +97,7 @@ public class AdEntity {
      * Комментарии к объявлению
      */
     @OneToMany(mappedBy = "ad", cascade = CascadeType.ALL, orphanRemoval = true)
+    @ToString.Exclude
     private List<CommentEntity> comments = new ArrayList<>();
 
     /**

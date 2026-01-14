@@ -96,7 +96,7 @@ public class GlobalExceptionHandler {
      * Используется для POST /users/set_password.
      *
      * @param ex исключение неверного пароля
-     * @return 401 UNAUTHORIZED
+     * @return 401 Unauthorized
      */
     @ExceptionHandler(InvalidPasswordException.class)
     public ResponseEntity<Void> handleInvalidPassword(InvalidPasswordException ex) {
