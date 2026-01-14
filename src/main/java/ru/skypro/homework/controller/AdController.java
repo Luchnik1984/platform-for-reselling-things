@@ -503,6 +503,4 @@ public class AdController {
 
     }
 
-
-
 }
