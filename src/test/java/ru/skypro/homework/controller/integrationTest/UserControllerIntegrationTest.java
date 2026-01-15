@@ -65,6 +65,16 @@ class UserControllerIntegrationTest extends AbstractIntegrationTest {
         return userRepository.save(user);
     }
 
+    private MockMultipartFile loadTestJpg() throws Exception {
+        return new MockMultipartFile(
+                "image",
+                "test.jpg",
+                "image/jpeg",
+                new org.springframework.core.io.ClassPathResource("image/test.jpg")
+                        .getInputStream().readAllBytes()
+        );
+    }
+
     @Test
     @DisplayName("GET /users/me без авторизации -> 401")
     void shouldReturn401_whenGetMeWithoutAuth() throws Exception {
@@ -175,12 +185,11 @@ class UserControllerIntegrationTest extends AbstractIntegrationTest {
     void shouldUpdateUserImage_whenUserAuthorized() throws Exception {
         createUser("imguser@test.ru", Role.USER);
 
-        MockMultipartFile image = new MockMultipartFile(
-                "image", "avatar.png", "image/png", "fake-avatar".getBytes());
+        MockMultipartFile image = loadTestJpg(); // ВАЖНО: реальная картинка
 
         mockMvc.perform(multipart("/users/me/image")
                         .file(image)
-                        .with(request -> { request.setMethod("PATCH"); return request; }))
+                        .with(r -> { r.setMethod("PATCH"); return r; }))
                 .andExpect(status().isOk());
     }
 
