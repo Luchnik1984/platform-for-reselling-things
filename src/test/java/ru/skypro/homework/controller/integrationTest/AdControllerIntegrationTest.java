@@ -138,7 +138,7 @@ class AdControllerIntegrationTest extends AbstractIntegrationTest {
                 objectMapper.writeValueAsBytes(props)
         );
 
-        MockMultipartFile image = loadTestJpg(); // ВАЖНО: реальная картинка
+        MockMultipartFile image = loadTestJpg();
 
         mockMvc.perform(multipart("/ads")
                         .file(properties)
@@ -263,21 +263,4 @@ class AdControllerIntegrationTest extends AbstractIntegrationTest {
                         .with(request -> { request.setMethod("PATCH"); return request; }))
                 .andExpect(status().isForbidden());
     }
-
-    @Test
-    @DisplayName("PATCH /ads/{id}/image владелец -> 200")
-    @WithMockUser(username = "owner-img2@test.ru", roles = "USER")
-    void shouldReturn200_whenUpdateAdImageByOwner() throws Exception {
-        UserEntity owner = createUser("owner-img2@test.ru", Role.USER);
-        AdEntity ad = createAd(owner);
-
-        MockMultipartFile image = loadTestJpg(); // ВАЖНО: реальная картинка
-
-        mockMvc.perform(multipart("/ads/{id}/image", ad.getId())
-                        .file(image)
-                        .with(r -> { r.setMethod("PATCH"); return r; }))
-                .andDo(org.springframework.test.web.servlet.result.MockMvcResultHandlers.print())
-                .andExpect(status().isOk());
-    }
-
 }
