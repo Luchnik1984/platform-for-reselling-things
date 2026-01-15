@@ -89,16 +89,8 @@ public class ImageEntity {
         if (filePath == null || filePath.isEmpty()) {
             return null;
         }
-
-        // Нормализуем путь: убираем начальный слэш, если он есть
-        // Это важно, чтобы не было двойных слэшей: "/images//uploads/..."
-        String normalizedPath = filePath.startsWith("/")
-                ? filePath.substring(1)
-                : filePath;
-
         // Префикс "/images/" будет обрабатываться ImageController
-        // Контроллер будет искать файл по normalizedPath в файловой системе
-        return "/images/" + normalizedPath;
+        return "/images/" + filePath.replace('\\', '/');
     }
 
     /**
