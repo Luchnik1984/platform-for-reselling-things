@@ -88,3 +88,12 @@ logging:
 # file:
 #   upload:
 #     dir: ${UPLOAD_DIR:./uploads}
+
+# ============================================
+# ADMIN REGISTRATION CONFIGURATION
+# ============================================
+admin:
+  registration:
+    enabled: ${ADMIN_REGISTRATION_ENABLED:false}
+    code: ${ADMIN_REGISTRATION_CODE:}
+    email-whitelist: ${ADMIN_EMAIL_WHITELIST:}
