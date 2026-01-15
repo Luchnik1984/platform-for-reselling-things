@@ -180,7 +180,7 @@ class UserControllerIntegrationTest extends AbstractIntegrationTest {
     void shouldUpdateUserImage_whenUserAuthorized() throws Exception {
         createUser("imguser@test.ru", Role.USER);
 
-        MockMultipartFile image = loadTestJpg(); // ВАЖНО: реальная картинка
+        MockMultipartFile image = loadTestJpg();
 
         mockMvc.perform(multipart("/users/me/image")
                         .file(image)
