@@ -409,11 +409,16 @@ public class AdController {
             )
     })
     @PatchMapping(path = "/{id}/image", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-
     @ResponseStatus(HttpStatus.OK)
     public ResponseEntity<byte[]> updateAdImage(@PathVariable("id") Integer id,
                                                 @RequestPart("image") MultipartFile image,
                                                 Authentication authentication) {
+
+        // Проверка, является ли текущий пользователь владельцем
+        ExtendedAd ad = adService.getAd(id);
+        if (!ad.getEmail().equals(authentication.getName())) {
+            throw new AccessDeniedException("Пользователь не является владельцем объявления.");
+        }
 
         String email = authentication.getName();
         log.info("Запрос обновления изображения объявления ID: {} пользователем: {}", id, email);
