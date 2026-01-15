@@ -43,11 +43,6 @@ class UserControllerIntegrationTest extends AbstractIntegrationTest {
     @Autowired private UserRepository userRepository;
     @Autowired private PasswordEncoder passwordEncoder;
 
-    private String generateUniqueEmail(String baseName) {
-        long suffix = Math.abs(System.nanoTime() % 1_000_000);
-        return baseName + suffix + "@m.ru";
-    }
-
     @BeforeEach
     void setUp() {
         userRepository.deleteAll();

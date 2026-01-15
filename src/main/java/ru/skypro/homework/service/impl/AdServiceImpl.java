@@ -11,6 +11,7 @@ import ru.skypro.homework.dto.ads.Ads;
 import ru.skypro.homework.dto.ads.CreateOrUpdateAd;
 import ru.skypro.homework.dto.ads.ExtendedAd;
 import ru.skypro.homework.entity.AdEntity;
+import ru.skypro.homework.entity.ImageEntity;
 import ru.skypro.homework.entity.UserEntity;
 import ru.skypro.homework.exceptions.AccessDeniedException;
 import ru.skypro.homework.exceptions.AdNotFoundException;
@@ -149,18 +150,53 @@ public class AdServiceImpl implements AdService {
         String email = authentication.getName();
         log.debug("Создание объявления пользователем: {}", email);
 
+        // Получаем автора
         UserEntity author = SecurityUtils.getAuthenticatedUser(userRepository, authentication);
+        log.debug("Автор найден: {} {} (ID: {})", author.getFirstName(), author.getLastName(), author.getId());
 
+        // Создаем сущность объявления
         AdEntity adEntity = adMapper.toEntity(createAd);
         adEntity.setAuthor(author);
 
+        // Сохраняем объявление (получаем ID)
         AdEntity savedEntity = adRepository.save(adEntity);
-        Ad createdAd = adMapper.toDto(savedEntity);
+        log.debug("Объявление сохранено в БД с ID: {}", savedEntity.getId());
 
-        imageService.uploadAdImage(savedEntity.getId(), image);
+        // Проверяем и загружаем изображение
+        if (image != null && !image.isEmpty()) {
+            try {
+                log.debug("Начало загрузки изображения для объявления ID: {}", savedEntity.getId());
+                ImageEntity imageEntity = imageService.uploadAdImage(savedEntity.getId(), image);
 
-        log.info("Создано объявление ID: {} пользователем {}", savedEntity.getId(), email);
-        return createdAd;
+                // Обновляем связь в текущей сессии
+                savedEntity.setImage(imageEntity);
+
+                // Сохраняем обновленное объявление с изображением
+                AdEntity updatedEntity = adRepository.save(savedEntity);
+                log.info("Изображение успешно загружено и связано с объявлением ID: {}. Путь: {}",
+                        updatedEntity.getId(),
+                        imageEntity != null ? imageEntity.getFilePath() : "null");
+
+        // Маппим к DTO с изображением
+                Ad createdAd = adMapper.toDto(updatedEntity);
+                log.info("Создано объявление с изображением ID: {} пользователем {}",
+                        updatedEntity.getId(), email);
+                return createdAd;
+
+            } catch (Exception e) {
+                log.error("Ошибка при загрузке изображения для объявления ID: {}", savedEntity.getId(), e);
+                // Откатываем транзакцию или продолжаем без изображения
+                throw new RuntimeException("Не удалось загрузить изображение для объявления", e);
+            }
+        } else {
+            log.warn("Объявление создано без изображения. ID: {}", savedEntity.getId());
+
+
+            Ad createdAd = adMapper.toDto(savedEntity);
+            log.info("Создано объявление без изображения ID: {} пользователем {}",
+                    savedEntity.getId(), email);
+            return createdAd;
+        }
     }
 
     /**

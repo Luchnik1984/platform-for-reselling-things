@@ -323,6 +323,7 @@ public class ImageServiceImpl implements ImageService {
      */
     public boolean deleteFile(String relativeFilePath) {
         if (relativeFilePath == null || relativeFilePath.trim().isEmpty()) {
+            log.debug("Путь к файлу пуст");
             return false;
         }
 
@@ -340,16 +341,30 @@ public class ImageServiceImpl implements ImageService {
                 return false;
             }
         } catch (Exception e) {
-            System.err.println("Ошибка при удалении файла: " + relativeFilePath);
-            e.printStackTrace();
+            log.error("Ошибка при удалении файла: {}", relativeFilePath, e);
+
             return false;
         }
     }
 
     public void delOldFile(ImageEntity imageEntity) {
         if (imageEntity == null) return;
-        String filePath = imageEntity.getFilePath();
-        String fileDirPath = Paths.get(UPLOAD_DIR, filePath).toString();
-        deleteFile(fileDirPath);
+        try {
+            String filePath = imageEntity.getFilePath();
+            if (filePath != null && !filePath.trim().isEmpty()) {
+                // Полный путь к файлу
+                Path fullPath = Paths.get(UPLOAD_DIR, filePath).normalize();
+
+                // Удаляем файл
+                deleteFile(fullPath.toString());
+
+                // Удаляем запись из БД
+                imageRepository.delete(imageEntity);
+                log.debug("Старое изображение удалено: {}", filePath);
+            }
+        } catch (Exception e) {
+            log.error("Ошибка при удалении старого файла", e);
+
+        }
     }
 }

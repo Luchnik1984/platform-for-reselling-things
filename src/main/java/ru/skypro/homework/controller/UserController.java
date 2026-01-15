@@ -10,18 +10,17 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
-import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import ru.skypro.homework.dto.user.NewPassword;
 import ru.skypro.homework.dto.user.UpdateUser;
 import ru.skypro.homework.dto.user.User;
 import ru.skypro.homework.entity.UserEntity;
-import ru.skypro.homework.repository.ImageRepository;
 import ru.skypro.homework.repository.UserRepository;
 import ru.skypro.homework.service.ImageService;
 import ru.skypro.homework.service.UserService;
 import org.springframework.security.core.Authentication;
+import ru.skypro.homework.util.SecurityUtils;
 
 import javax.validation.Valid;
 
@@ -181,17 +180,66 @@ public class UserController {
     @ResponseStatus(HttpStatus.OK)
     public void  updateUserImage(@RequestPart("image") MultipartFile image,
                                                 Authentication authentication) {
-        log.info("Запрос на обновление аватара пользователя: {}", authentication.getName());
-        log.debug("Файл: {} ({} байт, тип: {})",
-                image.getOriginalFilename(),
-                image.getSize(),
-                image.getContentType());
 
+        String email = authentication.getName();
+        log.info("Запрос на обновление аватара пользователя: {}", email);
+        // 1. Проверка файла (внутренняя валидация)
+        validateImageFile(image);
 
-         UserEntity user = userRepository.findByEmail(authentication.getName()).orElse(null);
-         imageService.uploadUserImage(user.getId(), image);
+        // 2. Получение пользователя с проверкой существования
+        UserEntity user = SecurityUtils.getAuthenticatedUser(userRepository, authentication);
+        log.debug("Пользователь найден: {} {} (ID: {})",
+                user.getFirstName(), user.getLastName(), user.getId());
 
-        log.info("Аватар пользователя {} успешно обновлен (заглушка)", authentication.getName());
+        // 3. Загрузка изображения
+        try {
+            log.debug("Файл: {} ({} байт, тип: {})",
+                    image.getOriginalFilename(),
+                    image.getSize(),
+                    image.getContentType());
 
+            imageService.uploadUserImage(user.getId(), image);
+            log.info("Аватар пользователя {} успешно обновлен ", email);
+        } catch (Exception e) {
+            log.error("Ошибка при обновлении аватара пользователя {}: {}", email, e.getMessage(), e);
+            // Все ошибки, кроме 401, будут обработаны GlobalExceptionHandler как 500
+            throw new RuntimeException("Не удалось обновить аватар", e);
+        }
+    }
+
+    /**
+     * Внутренняя валидация файла изображения.
+     * В случае ошибки выбрасывает RuntimeException, который будет обработан
+     * GlobalExceptionHandler и вернет 500 Internal Server Error.
+     *
+     * @param image файл для проверки
+     * @throws RuntimeException если файл не проходит валидацию
+     */
+    private void validateImageFile(MultipartFile image) {
+        if (image == null || image.isEmpty()) {
+            throw new RuntimeException("Файл изображения не может быть пустым");
+        }
+
+        // Проверка размера (5MB)
+        long maxSize = 5 * 1024 * 1024;
+        if (image.getSize() > maxSize) {
+            throw new RuntimeException(
+                    String.format("Размер файла превышает максимально допустимый (%d MB)",
+                            maxSize / (1024 * 1024)));
+        }
+
+        // Проверка типа файла
+        String contentType = image.getContentType();
+        if (contentType == null ||
+                !(contentType.equals("image/jpeg") ||
+                        contentType.equals("image/png") ||
+                        contentType.equals("image/gif") ||
+                        contentType.equals("image/webp"))) {
+            throw new RuntimeException(
+                    "Недопустимый тип файла. Допустимые типы: JPEG, PNG, GIF, WebP");
+        }
+
+        log.debug("Файл прошел валидацию: {}, размер: {} байт, тип: {}",
+                image.getOriginalFilename(), image.getSize(), contentType);
     }
 }
