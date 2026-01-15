@@ -18,6 +18,7 @@ import ru.skypro.homework.exceptions.InvalidPasswordException;
 import ru.skypro.homework.repository.UserRepository;
 import ru.skypro.homework.service.UserService;
 import ru.skypro.homework.service.impl.UserServiceImpl;
+import ru.skypro.homework.util.TestAuthenticationUtils;
 
 import static org.junit.jupiter.api.Assertions.*;
 

@@ -25,6 +25,7 @@ import ru.skypro.homework.repository.UserRepository;
 import ru.skypro.homework.service.CommentService;
 import ru.skypro.homework.service.impl.CommentServiceImpl;
 import ru.skypro.homework.util.SecurityUtils;
+import ru.skypro.homework.util.TestAuthenticationUtils;
 
 import java.util.List;
 

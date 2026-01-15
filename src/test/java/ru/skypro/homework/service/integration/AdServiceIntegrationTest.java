@@ -24,6 +24,7 @@ import ru.skypro.homework.repository.UserRepository;
 import ru.skypro.homework.service.AdService;
 import ru.skypro.homework.service.impl.AdServiceImpl;
 import ru.skypro.homework.util.SecurityUtils;
+import ru.skypro.homework.util.TestAuthenticationUtils;
 
 import java.util.List;
 

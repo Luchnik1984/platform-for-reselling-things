@@ -1,4 +1,4 @@
-package ru.skypro.homework.service.integration;
+package ru.skypro.homework.util;
 
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
