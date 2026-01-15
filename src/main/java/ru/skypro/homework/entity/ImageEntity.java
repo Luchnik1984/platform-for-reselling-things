@@ -89,7 +89,7 @@ public class ImageEntity {
         if (filePath == null || filePath.isEmpty()) {
             return null;
         }
-        // Префикс "/images/" будет обрабатываться ImageController
+
         return "/images/" + filePath.replace('\\', '/');
     }
 

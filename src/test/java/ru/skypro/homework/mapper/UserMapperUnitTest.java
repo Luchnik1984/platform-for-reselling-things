@@ -400,7 +400,7 @@ public class UserMapperUnitTest {
     @DisplayName("Проверка маппинга изображения: путь с начальным слэшем")
     void imageMapping_ShouldHandlePathWithLeadingSlash() {
 
-        ImageEntity image = createTestImage("/uploads/avatars/user-1.jpg");
+        ImageEntity image = createTestImage("uploads/avatars/user-1.jpg");
         UserEntity entity = createTestUserEntity(1, TEST_EMAIL, Role.USER, image);
 
         User dto = mapper.toDto(entity);
