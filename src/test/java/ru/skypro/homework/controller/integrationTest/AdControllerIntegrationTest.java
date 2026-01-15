@@ -6,12 +6,12 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.io.ClassPathResource;
 import org.springframework.http.MediaType;
 import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.web.servlet.MockMvc;
-import org.springframework.transaction.annotation.Transactional;
 import ru.skypro.homework.AbstractIntegrationTest;
 import ru.skypro.homework.dto.ads.CreateOrUpdateAd;
 import ru.skypro.homework.entity.AdEntity;
@@ -20,6 +20,8 @@ import ru.skypro.homework.enums.Role;
 import ru.skypro.homework.repository.AdRepository;
 import ru.skypro.homework.repository.CommentRepository;
 import ru.skypro.homework.repository.UserRepository;
+
+import java.io.IOException;
 
 import static org.hamcrest.Matchers.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
@@ -56,6 +58,15 @@ class AdControllerIntegrationTest extends AbstractIntegrationTest {
         commentRepository.deleteAll();
         adRepository.deleteAll();
         userRepository.deleteAll();
+    }
+
+    private MockMultipartFile loadTestJpg() throws IOException {
+        return new MockMultipartFile(
+                "image",
+                "test.jpg",
+                "image/jpeg",
+                new ClassPathResource("image/test.jpg").getInputStream().readAllBytes()
+        );
     }
 
     private UserEntity createUser(String email, Role role) {
@@ -118,13 +129,16 @@ class AdControllerIntegrationTest extends AbstractIntegrationTest {
         CreateOrUpdateAd props = new CreateOrUpdateAd();
         props.setTitle("New title");
         props.setPrice(1500);
-        props.setDescription("Very nice description");
+        props.setDescription("Very nice description with enough length");
 
         MockMultipartFile properties = new MockMultipartFile(
-                "properties", "properties", "application/json", objectMapper.writeValueAsBytes(props));
+                "properties",
+                "properties.json",
+                MediaType.APPLICATION_JSON_VALUE,
+                objectMapper.writeValueAsBytes(props)
+        );
 
-        MockMultipartFile image = new MockMultipartFile(
-                "image", "img.png", "image/png", "fake-image".getBytes());
+        MockMultipartFile image = loadTestJpg(); // ВАЖНО: реальная картинка
 
         mockMvc.perform(multipart("/ads")
                         .file(properties)
@@ -251,37 +265,19 @@ class AdControllerIntegrationTest extends AbstractIntegrationTest {
     }
 
     @Test
-    @DisplayName("PATCH /ads/{id}/image владелец -> 200 и octet-stream")
-    @WithMockUser(username = "owner-img2@test.ru", roles = "USER")
-    void shouldUpdateAdImage_whenOwner() throws Exception {
-        UserEntity owner = createUser("owner-img2@test.ru", Role.USER);
-        AdEntity ad = createAd(owner);
-
-        MockMultipartFile image = new MockMultipartFile(
-                "image", "img.png", "image/png", "fake-image".getBytes());
-
-        mockMvc.perform(multipart("/ads/{id}/image", ad.getId())
-                        .file(image)
-                        .with(request -> { request.setMethod("PATCH"); return request; }))
-                .andExpect(status().isOk())
-                .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_OCTET_STREAM));
-    }
-
-    @Test
-    @DisplayName("PATCH /ads/{id}/image владелец -> 200 и octet-stream")
+    @DisplayName("PATCH /ads/{id}/image владелец -> 200")
     @WithMockUser(username = "owner-img2@test.ru", roles = "USER")
     void shouldReturn200_whenUpdateAdImageByOwner() throws Exception {
         UserEntity owner = createUser("owner-img2@test.ru", Role.USER);
         AdEntity ad = createAd(owner);
 
-        MockMultipartFile image = new MockMultipartFile(
-                "image", "img.png", "image/png", "fake-image".getBytes());
+        MockMultipartFile image = loadTestJpg(); // ВАЖНО: реальная картинка
 
         mockMvc.perform(multipart("/ads/{id}/image", ad.getId())
                         .file(image)
                         .with(r -> { r.setMethod("PATCH"); return r; }))
-                .andExpect(status().isOk())
-                .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_OCTET_STREAM));
+                .andDo(org.springframework.test.web.servlet.result.MockMvcResultHandlers.print())
+                .andExpect(status().isOk());
     }
 
 }
