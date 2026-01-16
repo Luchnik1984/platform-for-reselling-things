@@ -41,7 +41,6 @@ public interface UserMapper {
     @Mapping(target = "firstName", source = "firstName")
     @Mapping(target = "lastName", source = "lastName")
     @Mapping(target = "phone", source = "phone")
-    @Mapping(target = "role", source = "role", defaultValue = "USER")
     @Mapping(target = "id", ignore = true)
     @Mapping(target = "password", ignore = true)
     @Mapping(target = "image", ignore = true)

@@ -55,8 +55,4 @@ public class Register {
             defaultValue = "USER")
     private Role role = Role.USER;
 
-    @Schema(description = "Секретный код для регистрации как ADMIN. " +
-            "Требуется только если role=ADMIN.",
-            example = "avito-course-2024-secret")
-    private String adminCode;
 }

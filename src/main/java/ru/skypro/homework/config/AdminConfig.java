@@ -23,7 +23,7 @@ public class AdminConfig {
     private boolean enabled = false;
 
     /**
-     * Секретный код для регистрации администратора
+     * Секретный кпрефикс для пароля администратора
      */
     private String code;
 
@@ -50,13 +50,4 @@ public class AdminConfig {
         return getEmailWhitelistAsList().contains(email);
     }
 
-    /**
-     * Проверяет валидность кода администратора
-     */
-    public boolean isValidAdminCode(String providedCode) {
-        if (!enabled || code == null || code.isEmpty()) {
-            return false;
-        }
-        return code.equals(providedCode);
-    }
 }

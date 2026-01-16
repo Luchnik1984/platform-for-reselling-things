@@ -95,5 +95,4 @@ logging:
 admin:
   registration:
     enabled: ${ADMIN_REGISTRATION_ENABLED:false}
-    code: ${ADMIN_REGISTRATION_CODE:}
     email-whitelist: ${ADMIN_EMAIL_WHITELIST:}

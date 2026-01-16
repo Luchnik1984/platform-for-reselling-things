@@ -40,9 +40,7 @@ public class RegServiceImpl implements RegService {
      * <p>
      * Особенности безопасности:
      * 1. Всегда проверяет уникальность email
-     * 2. Для регистрации как ADMIN требуется:
-     *    - Либо валидный adminCode из конфигурации
-     *    - Либо email из whitelist
+     * 2. Для регистрации как ADMIN требуется email из whitelist
      * 3. Иначе автоматически понижается до USER
      * </p>
      */
@@ -51,7 +49,12 @@ public class RegServiceImpl implements RegService {
     public boolean register(Register register) {
 
         String email = register.getUsername();
+        String rawPassword = register.getPassword();
         log.info("Начало регистрации пользователя: {}", email);
+
+        log.debug("Конфигурация администратора: enabled={},  whitelist={}",
+                adminConfig.isEnabled(), adminConfig.getEmailWhitelist());
+
 
         // 1. Проверка уникальности email
         if (userRepository.existsByEmail(email)) {
@@ -60,7 +63,7 @@ public class RegServiceImpl implements RegService {
         }
 
         // Определяем конечную роль с проверкой безопасности
-        Role finalRole = determineFinalRole(register);
+        Role finalRole = determineFinalRole(email, register.getRole());
 
         // Обновляем роль в DTO для маппера
         register.setRole(finalRole);
@@ -69,37 +72,41 @@ public class RegServiceImpl implements RegService {
         UserEntity userEntity = userMapper.toEntity(register);
 
         // 3. Хеширование пароля (совместимо с JdbcUserDetailsManager)
-        String rawPassword = register.getPassword();
+
         String hashedPassword = passwordEncoder.encode(rawPassword);
         userEntity.setPassword(hashedPassword);
-
         log.trace("Пароль захеширован для пользователя: {}", email);
 
-        // 4. Гарантируем, что пользователь активен
+        // Гарантируем, что пользователь активен
         userEntity.setEnabled(true);
 
-        // 5. Сохраняем в БД
+        // Сохраняем в БД
         userRepository.save(userEntity);
 
-        log.info("Пользователь успешно зарегистрирован: {}", email);
+        log.info("Пользователь успешно зарегистрирован: {} с ролью {}", email, finalRole);
         return true;
     }
 
     /**
-     * Определяет конечную роль пользователя с проверкой безопасности.
+     * Определяет конечную роль пользователя.
+     * ADMIN только если email в whitelist, иначе USER.
      */
-    private Role determineFinalRole(Register register) {
-        String email = register.getUsername();
-        Role requestedRole = register.getRole() != null ? register.getRole() : Role.USER;
+    private Role determineFinalRole(String email, Role requestedRole) {
+        if (requestedRole == null) {
+            requestedRole = Role.USER;
+        }
+
+        log.debug("Запрошена роль: {} для пользователя: {}", requestedRole, email);
 
         // Если запрошена роль USER - всегда разрешаем
         if (requestedRole == Role.USER) {
+            log.debug("Запрошена роль USER, разрешаем без проверок");
             return Role.USER;
         }
 
-        // Если запрошена роль ADMIN - проверяем права
+        // Если запрошена роль ADMIN - проверяем whitelist
         if (requestedRole == Role.ADMIN) {
-            boolean canBeAdmin = checkAdminRegistrationRights(email, register.getAdminCode());
+            boolean canBeAdmin = checkAdminRegistrationRights(email);
 
             if (canBeAdmin) {
                 log.info("Админ одобрен для регистрации: {}", email);
@@ -110,30 +117,30 @@ public class RegServiceImpl implements RegService {
             }
         }
 
-        // Fallback
         return Role.USER;
     }
 
     /**
      * Проверяет права для регистрации как ADMIN.
-     * Два способа стать админом:
-     * 1. Валидный adminCode из конфигурации
-     * 2. Email в whitelist (независимо от кода)
+     * Только через whitelist.
      */
-    private boolean checkAdminRegistrationRights(String email, String providedAdminCode) {
-        // Способ 1: Email в белом списке
+    private boolean checkAdminRegistrationRights(String email) {
+        // Проверяем, включена ли регистрация администраторов
+        if (!adminConfig.isEnabled()) {
+            log.debug("Регистрация администраторов отключена в конфигурации");
+            return false;
+        }
+
+        log.debug("Проверка whitelist для: {}", email);
+        log.debug("Whitelist: {}", adminConfig.getEmailWhitelist());
+
+        // Проверяем email в белом списке
         if (adminConfig.isEmailInWhitelist(email)) {
             log.debug("Email {} находится в whitelist для ADMIN", email);
             return true;
         }
 
-        // Способ 2: Валидный adminCode
-        if (adminConfig.isValidAdminCode(providedAdminCode)) {
-            log.debug("Предоставлен валидный adminCode для {}", email);
-            return true;
-        }
-
-        log.debug("Нет прав для регистрации как ADMIN: {}", email);
+        log.debug("Email {} НЕ в whitelist", email);
         return false;
     }
 
