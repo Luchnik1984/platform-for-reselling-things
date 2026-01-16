@@ -5,9 +5,6 @@
 ## ВАЖНЫЕ ЗАМЕТКИ
 ### В pom.xml:
 - **Версия JAVA11 изменена на JAVA17**
-- **Временно, H2 база принята основной (<scope>runtime</scope> вместо test)**
-    для возможности тестирования эндпоинтов до момента создания основной бд.
-    Переключить на test, при создании Postgresql бд.
 
 ##  Текущий статус
 ### Sprint11 - Оптимизация и рефакторинг
@@ -213,18 +210,7 @@
 ```
 
 ### Запуск приложения
-- Приложение запустится с H2 базой данных в памяти (default профиль)
-```bash
-  ./mvnw spring-boot:run
-```
-или 
-```bash
-  ./mvnw spring-boot:run
-# Запускаем приложение
-  $env:SPRING_PROFILES_ACTIVE=""
-  # Устанавливаем профиль
-  #
-```
+
 ## Разработка с PostgreSQL:
 - Вариант A: PostgreSQL в Docker (рекомендуется)
 ```bash
@@ -319,7 +305,7 @@
 ## Документация API 
 - Swagger UI: http://localhost:8080/swagger-ui.html
 - OpenAPI JSON: http://localhost:8080/api-docs
-- OpenAPI YAML:** http://localhost:8080/api-docs.yaml
+- OpenAPI YAML: http://localhost:8080/api-docs.yaml
 
 
 ##  Статистика проекта
@@ -353,9 +339,13 @@
 - **Java 17**
 - **Spring Boot 2.7.15**
 - **Spring Security** (Basic Auth)
-- **Spring Data JPA** (на следующих этапах)
-- **PostgreSQL** (основная БД, на следующих этапах)
-- **H2 Database** (тестовая БД, на следующих этапах)
+- **Spring Data JPA**
+- **Flywaydb**
+- **PostgreSQL**
+- **Docker compose**
+- **Mapstruct**
+- **Docker testcontainers**
+- **H2 Database in memory** 
 - **Lombok** (упрощение кода)
 - **SpringDoc OpenAPI** 
 
@@ -398,6 +388,7 @@
    - 
 #### Поток данных: 
 Frontend → Security → Controller → Service → Repository → Database
+
 
 
 ##  Команда
