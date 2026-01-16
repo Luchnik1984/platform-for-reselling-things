@@ -1,47 +1,76 @@
 package ru.skypro.homework.service.impl;
 
-import org.springframework.security.core.userdetails.User;
-import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.security.provisioning.UserDetailsManager;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Service;
-import ru.skypro.homework.dto.Register;
 import ru.skypro.homework.service.AuthService;
 
+/**
+ * Сервис для работы с аутентификацией.
+ * Использует JdbcUserDetailsManager через AuthenticationManager.
+ *
+ * <p>Основная функция: Проверка учетных данных для эндпоинта /login.
+ * JdbcUserDetailsManager автоматически загружает пользователей из БД.
+ */
+@Slf4j
 @Service
+@RequiredArgsConstructor
 public class AuthServiceImpl implements AuthService {
 
-    private final UserDetailsManager manager;
-    private final PasswordEncoder encoder;
 
-    public AuthServiceImpl(UserDetailsManager manager,
-                           PasswordEncoder passwordEncoder) {
-        this.manager = manager;
-        this.encoder = passwordEncoder;
-    }
+    private final AuthenticationManager authenticationManager;
 
+    /**
+     * Проверяет учетные данные пользователя.
+     * Использует AuthenticationManager, который делегирует JdbcUserDetailsManager.
+     *
+     * <p>Алгоритм:
+     * <ol></ol>
+     * <li> Создает UsernamePasswordAuthenticationToken</li>
+     * <li> Передает в AuthenticationManager</li>
+     * <li> AuthenticationManager использует JdbcUserDetailsManager для проверки</li>
+     * </ol>
+     *
+     * @param username email пользователя
+     * @param password пароль пользователя
+     * @return true если учетные данные верны
+     */
     @Override
-    public boolean login(String userName, String password) {
-        if (!manager.userExists(userName)) {
+    public boolean login(String username, String password) {
+        log.debug("Проверка учетных данных для пользователя: {}", username);
+
+        try {
+            // Создаем токен аутентификации
+            UsernamePasswordAuthenticationToken authToken =
+                    new UsernamePasswordAuthenticationToken(username, password);
+
+            log.trace("Токен аутентификации создан для: {}", username);
+
+            // AuthenticationManager проверяет токен через JdbcUserDetailsManager
+            Authentication authentication = authenticationManager.authenticate(authToken);
+
+            // Проверяем результат
+            boolean isAuthenticated = authentication.isAuthenticated();
+
+            if (isAuthenticated) {
+                log.debug("Аутентификация успешна для пользователя: {}", username);
+            } else {
+                log.warn("Аутентификация не удалась для пользователя: {}", username);
+            }
+            return isAuthenticated;
+
+        } catch (BadCredentialsException e) {
+            log.warn("Неверные учетные данные для пользователя: {}", username);
+            return false;
+        } catch (Exception e) {
+
+            log.error("Ошибка при аутентификации пользователя {}: {}",
+                    username, e.getMessage(), e);
             return false;
         }
-        UserDetails userDetails = manager.loadUserByUsername(userName);
-        return encoder.matches(password, userDetails.getPassword());
     }
-
-    @Override
-    public boolean register(Register register) {
-        if (manager.userExists(register.getUsername())) {
-            return false;
-        }
-        manager.createUser(
-                User.builder()
-                        .passwordEncoder(this.encoder::encode)
-                        .password(register.getPassword())
-                        .username(register.getUsername())
-                        .roles(register.getRole().name())
-                        .build());
-        return true;
-    }
-
 }

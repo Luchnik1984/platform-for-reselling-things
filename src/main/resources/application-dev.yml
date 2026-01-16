@@ -1,0 +1,90 @@
+# ============================================
+# DEVELOPMENT PROFILE (PostgreSQL)
+#   Activated: -Dspring.profiles.active=dev
+# ============================================
+
+spring:
+  config:
+    activate:
+      on-profile: dev
+    import: optional:file:.env[.properties]
+
+
+  # ============================================
+  # DATABASE SETTINGS (PostgreSQL from .env)
+  # ============================================
+  datasource:
+    url: jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5432}/${DB_NAME:ads_platform}
+    username: ${DB_USERNAME:postgres}
+    password: ${DB_PASSWORD:postgres}
+    driver-class-name: org.postgresql.Driver
+    hikari:
+      connection-timeout: 30000
+      maximum-pool-size: 10
+      minimum-idle: 5
+
+  # ============================================
+  # JPA / HIBERNATE SETTINGS
+  # ============================================
+
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    show-sql: ${SHOW_SQL:true}
+    properties:
+      hibernate:
+        format_sql: true
+        use_sql_comments: true
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+    open-in-view: false
+#        jdbc:
+#          batch_size: 20
+#        order_inserts: true
+#        order_updates: true
+#        batch_versioned_data: true
+
+  # ============================================
+  # FLYWAY SETTINGS (database migrations)
+  # ============================================
+  flyway:
+    enabled: true
+    locations: classpath:db/migration
+    baseline-on-migrate: true
+    validate-on-migrate: true
+    validate-migration-naming: true
+    out-of-order: false
+    clean-disabled: true
+
+    placeholder-replacement: false  # Отключаем подстановку, если не используем
+
+  # ============================================
+  # ADDITIONAL SETTINGS FOR DEVELOPMENT
+  # ============================================
+  devtools:
+    restart:
+      enabled: true
+
+server:
+  port: ${APP_PORT:8080}
+  error:
+    include-stacktrace: always
+    include-message: always
+
+logging:
+  level:
+    ru.skypro.homework: ${LOG_LEVEL:DEBUG}
+    org.hibernate.SQL: ${HIBERNATE_SQL_LOG_LEVEL:DEBUG}
+    org.hibernate.type.descriptor.sql: TRACE
+  pattern:
+    console: '%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n'
+  file:
+    name: ${LOG_DIR:logs}/application-dev.log
+  logback:
+    rollingpolicy:
+      max-file-size: 10MB
+      max-history: 30
+
+# Directory for uploads (for STAGE 3)
+# file:
+#   upload:
+#     dir: ${UPLOAD_DIR:./uploads}
