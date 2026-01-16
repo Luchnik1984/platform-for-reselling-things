@@ -384,7 +384,6 @@ REST API сервис для платформы объявлений о прод
 Frontend → Security → Controller → Service → Repository → Database
 
 
-
 ##  Команда
 - **Гребнев Артём**
 - **Лучник Иван**
